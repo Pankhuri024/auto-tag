@@ -29,7 +29,7 @@ def check_keywords(text, keyword_list):
 def process_insight():
     try:
         data = request.get_json()
-        summary = data.get('summary', '')
+        summary = data.get('summary',summary)
         goals = data.get('goals', goals)  # Default to predefined goals if not passed
         categories = data.get('categories', categories)  # Default to predefined categories
         tools = data.get('tools', tools)  # Default to predefined tools
