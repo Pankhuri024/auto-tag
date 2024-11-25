@@ -24,11 +24,11 @@ def process_insight():
         summary = data.get('summary', '')  # Default to empty string if not provided
 
         # Use the predefined values if they are not passed in the request
-        goals = data.get('goals', goals)
-        categories = data.get('categories', categories)
-        tools = data.get('tools', tools)
-        elements = data.get('elements', elements)
-        research_types = data.get('research_types', research_types)
+        goals = data.get('goals', [])
+        categories = data.get('categories', [])
+        tools = data.get('tools', [])
+        elements = data.get('elements', [])
+        research_types = data.get('research_types', [])
 
         if not summary:
             return jsonify({"error": "Summary text is required"}), 400
