@@ -4,17 +4,17 @@ app = Flask(__name__)
 
 # Predefined categories, elements, aspects, tools, goals, and research types
 # Tools
-tools = ["FullStory","Google Analytics","Hotjar","Convert"]
+# tools = ["FullStory","Google Analytics","Hotjar","Convert"]
 
-# Categories
-categories = ["Branding","Blogs/Content Marketing","Email","Events","ABM & Personalization","Persona Development","Search","Social Media","Sponsorships","Clients","Contractors/Suppliers","Business Risk & Liability","Contractor Prequalification","Cybersecurity","ESG & Sustainability","Health & Safety","Supply Chain Risk","Worker Compliance"]
+# # Categories
+# categories = ["Branding","Blogs/Content Marketing","Email","Events","ABM & Personalization","Persona Development","Search","Social Media","Sponsorships","Clients","Contractors/Suppliers","Business Risk & Liability","Contractor Prequalification","Cybersecurity","ESG & Sustainability","Health & Safety","Supply Chain Risk","Worker Compliance"]
 
-# Elements & Aspects
-elements = ["Images","Copy","Layout","Design","Video","Functional","Navigation"]
-# Research Types
-research_types = ["General","Data Analysis","User Study","Survey","A/B (Split Test)","Market Research"]
-# Goals
-goals = ["Contact Sales","Logins","Gated Asset Registrations","Chat Starts","Event Registrations","Engagement","Site Traffic"]
+# # Elements & Aspects
+# elements = ["Images","Copy","Layout","Design","Video","Functional","Navigation"]
+# # Research Types
+# research_types = ["General","Data Analysis","User Study","Survey","A/B (Split Test)","Market Research"]
+# # Goals
+# goals = ["Contact Sales","Logins","Gated Asset Registrations","Chat Starts","Event Registrations","Engagement","Site Traffic"]
 
 
 # Function to find keywords in the summary text
@@ -30,6 +30,11 @@ def process_insight():
     try:
         data = request.get_json()
         summary = data.get('summary', '')
+        goals = data.get('goals', goals)  # Default to predefined goals if not passed
+        categories = data.get('categories', categories)  # Default to predefined categories
+        tools = data.get('tools', tools)  # Default to predefined tools
+        elements = data.get('elements', elements)  # Default to predefined elements
+        research_types = data.get('research_types', research_types) 
 
         if not summary:
             return jsonify({"error": "Summary text is required"}), 400
