@@ -29,6 +29,7 @@ def check_keywords(text, keyword_list):
 def process_insight():
     try:
         data = request.get_json()
+        app.logger.info(f"Received request data: {data}")
         summary = data.get('summary', '')
 
         if not summary:
@@ -51,6 +52,7 @@ def process_insight():
         })
 
     except Exception as e:
+        app.logger.error(f"Error processing insight: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
