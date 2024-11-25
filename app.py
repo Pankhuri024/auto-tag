@@ -1,29 +1,20 @@
 from flask import Flask, request, jsonify
+import openai  # Install the OpenAI Python library using `pip install openai`
 
 app = Flask(__name__)
 
 # Predefined categories, elements, aspects, tools, goals, and research types
-# Tools
-tools = ["FullStory","Google Analytics","Hotjar","Convert"]
+tools = ["FullStory", "Google Analytics", "Hotjar", "Convert"]
+categories = ["Branding", "Blogs/Content Marketing", "Email", "Events", "ABM & Personalization",
+              "Persona Development", "Search", "Social Media", "Sponsorships", "Clients", "Contractors/Suppliers",
+              "Business Risk & Liability", "Contractor Prequalification", "Cybersecurity", "ESG & Sustainability",
+              "Health & Safety", "Supply Chain Risk", "Worker Compliance"]
+elements = ["Images", "Copy", "Layout", "Design", "Video", "Functional", "Navigation"]
+research_types = ["General", "Data Analysis", "User Study", "Survey", "A/B (Split Test)", "Market Research"]
+goals = ["Contact Sales", "Logins", "Gated Asset Registrations", "Chat Starts", "Event Registrations", "Engagement", "Site Traffic"]
 
-# Categories
-categories = ["Branding","Blogs/Content Marketing","Email","Events","ABM & Personalization","Persona Development","Search","Social Media","Sponsorships","Clients","Contractors/Suppliers","Business Risk & Liability","Contractor Prequalification","Cybersecurity","ESG & Sustainability","Health & Safety","Supply Chain Risk","Worker Compliance"]
-
-# Elements & Aspects
-elements = ["Images","Copy","Layout","Design","Video","Functional","Navigation"]
-# Research Types
-research_types = ["General","Data Analysis","User Study","Survey","A/B (Split Test)","Market Research"]
-# Goals
-goals = ["Contact Sales","Logins","Gated Asset Registrations","Chat Starts","Event Registrations","Engagement","Site Traffic"]
-
-
-# Function to find keywords in the summary text
-def check_keywords(text, keyword_list):
-    selected_keywords = []
-    for keyword in keyword_list:
-        if keyword.lower() in text.lower():
-            selected_keywords.append(keyword)
-    return selected_keywords
+# Configure OpenAI API key
+openai.api_key = "YOUR_OPENAI_API_KEY"  # Replace with your OpenAI API key
 
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
@@ -35,21 +26,31 @@ def process_insight():
         if not summary:
             return jsonify({"error": "Summary text is required"}), 400
 
-        # Check for keywords in the provided summary
-        selected_categories = check_keywords(summary, categories)
-        selected_elements = check_keywords(summary, elements)
-        selected_tools = check_keywords(summary, tools)
-        selected_goals = check_keywords(summary, goals)
-        selected_research_types = check_keywords(summary, research_types)
+        # Use GPT model to analyze the summary and suggest categories, tools, goals, etc.
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that categorizes insights based on context."},
+                {
+                    "role": "user",
+                    "content": f"""Analyze the following summary and suggest categories, tools, goals, elements, and research types:
+                    Summary: {summary}
+                    Categories: {categories}
+                    Tools: {tools}
+                    Goals: {goals}
+                    Elements: {elements}
+                    Research Types: {research_types}
+                    Provide the response as a JSON object with keys: selected_categories, selected_tools, selected_goals, selected_elements, and selected_research_types."""
+                }
+            ]
+        )
 
-        # Return the auto-selected values
-        return jsonify({
-            "selected_categories": selected_categories,
-            "selected_elements": selected_elements,
-            "selected_tools": selected_tools,
-            "selected_goals": selected_goals,
-            "selected_research_types": selected_research_types
-        })
+        # Extract AI's response
+        ai_response = response['choices'][0]['message']['content']
+        app.logger.info(f"AI Response: {ai_response}")
+
+        # Convert the response to JSON
+        return jsonify({"ai_suggestions": ai_response})
 
     except Exception as e:
         app.logger.error(f"Error processing insight: {str(e)}")
