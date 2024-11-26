@@ -29,6 +29,8 @@ def process_insight():
         tools = data.get('tools', [])
         elements = data.get('elements', [])
         research_types = data.get('research_types', [])
+        industries = data.get('industries', [])
+        tags = data.get('tags', [])
 
         if not summary:
             return jsonify({"error": "Summary text is required"}), 400
@@ -39,6 +41,8 @@ def process_insight():
         selected_tools = check_keywords(summary, tools)
         selected_goals = check_keywords(summary, goals)
         selected_research_types = check_keywords(summary, research_types)
+        selected_industries = check_keywords(summary, industries)
+        selected_tags = check_keywords(summary, tags)
 
         # Return the auto-selected values
         return jsonify({
@@ -46,7 +50,9 @@ def process_insight():
             "selected_elements": selected_elements,
             "selected_tools": selected_tools,
             "selected_goals": selected_goals,
-            "selected_research_types": selected_research_types
+            "selected_research_types,": selected_research_types,
+            "selected_industries": selected_industries,
+            "selected_tags": selected_tags
         })
 
     except Exception as e:
