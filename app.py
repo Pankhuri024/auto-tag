@@ -50,7 +50,7 @@ def process_insight():
             "selected_elements": selected_elements,
             "selected_tools": selected_tools,
             "selected_goals": selected_goals,
-            "selected_research_types,": selected_research_types,
+            "selected_research_types": selected_research_types,
             "selected_industries": selected_industries,
             "selected_tags": selected_tags
         })
