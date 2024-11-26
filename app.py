@@ -42,7 +42,6 @@ def process_insight():
         selected_goals = check_keywords(summary, goals)
         selected_research_types = check_keywords(summary, research_types)
         selected_industries = check_keywords(summary, industries)
-        selected_tags = check_keywords(summary, tags)
 
         # Return the auto-selected values
         return jsonify({
@@ -52,7 +51,6 @@ def process_insight():
             "selected_goals": selected_goals,
             "selected_research_types": selected_research_types,
             "selected_industries": selected_industries,
-            "selected_tags": selected_tags
         })
 
     except Exception as e:
