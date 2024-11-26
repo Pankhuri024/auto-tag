@@ -30,7 +30,6 @@ def process_insight():
         elements = data.get('elements', [])
         research_types = data.get('research_types', [])
         industries = data.get('industries', [])
-        tags = data.get('tags', [])
 
         if not summary:
             return jsonify({"error": "Summary text is required"}), 400
