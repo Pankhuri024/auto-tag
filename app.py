@@ -1,13 +1,19 @@
 from flask import Flask, request, jsonify
-from fuzzywuzzy import fuzz
 
 app = Flask(__name__)
 
-# Function to find keywords in the summary text using fuzzy matching
-def check_keywords(text, keyword_list, threshold=80):
+# # Predefined categories, elements, aspects, tools, goals, and research types
+# goals = ["Contact Sales", "Logins", "Gated Asset Registrations", "Chat Starts", "Event Registrations", "Engagement", "Site Traffic"]
+# categories = ["Branding", "Blogs/Content Marketing", "Email", "Events", "ABM & Personalization", "Persona Development", "Search", "Social Media", "Sponsorships", "Clients", "Contractors/Suppliers", "Business Risk & Liability", "Contractor Prequalification", "Cybersecurity", "ESG & Sustainability", "Health & Safety", "Supply Chain Risk", "Worker Compliance"]
+# tools = ["FullStory", "Google Analytics", "Hotjar", "Convert"]
+# elements = ["Images", "Copy", "Layout", "Design", "Video", "Functional", "Navigation"]
+# research_types = ["General", "Data Analysis", "User Study", "Survey", "A/B (Split Test)", "Market Research"]
+
+# Function to find keywords in the summary text
+def check_keywords(text, keyword_list):
     selected_keywords = []
     for keyword in keyword_list:
-        if fuzz.partial_ratio(keyword.lower(), text.lower()) >= threshold:
+        if keyword.lower() in text.lower():
             selected_keywords.append(keyword)
     return selected_keywords
 
