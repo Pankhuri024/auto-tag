@@ -10,6 +10,7 @@ app = Flask(__name__)
 # research_types = ["General", "Data Analysis", "User Study", "Survey", "A/B (Split Test)", "Market Research"]
 
 # Function to find keywords in the summary text
+
 def check_keywords(text, keyword_list):
     selected_keywords = []
     for keyword in keyword_list:
