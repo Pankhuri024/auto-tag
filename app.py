@@ -14,9 +14,12 @@ app = Flask(__name__)
 def check_keywords(text, keyword_list):
     selected_keywords = []
     for keyword in keyword_list:
+        # Check if any part of the keyword exists in the text
+        # Convert both to lowercase for case-insensitive matching
         if keyword.lower() in text.lower():
             selected_keywords.append(keyword)
     return selected_keywords
+
 
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
