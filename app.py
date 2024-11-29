@@ -23,11 +23,15 @@ def check_keywords(text, keyword_list):
         # Check if the entire keyword phrase (multi-word) exists as an exact match in the text
         if keyword_lower in text_lower:
             selected_keywords.append(keyword)
-        # If the keyword has multiple words, check each word separately
+        # Match if ALL stemmed words in the multi-word keyword exist in the text (current logic)
         elif all(stemmer.stem(word) in text_words for word in keyword_lower.split()):
+            selected_keywords.append(keyword)
+        # Match if ANY single word from the keyword exists in the text
+        elif any(stemmer.stem(word) in text_words for word in keyword_lower.split()):
             selected_keywords.append(keyword)
     
     return selected_keywords
+
 
 
 @app.route('/process_insight', methods=['POST'])
