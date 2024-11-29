@@ -1,25 +1,21 @@
 from flask import Flask, request, jsonify
+import re
 
 app = Flask(__name__)
 
-# # Predefined categories, elements, aspects, tools, goals, and research types
-# goals = ["Contact Sales", "Logins", "Gated Asset Registrations", "Chat Starts", "Event Registrations", "Engagement", "Site Traffic"]
-# categories = ["Branding", "Blogs/Content Marketing", "Email", "Events", "ABM & Personalization", "Persona Development", "Search", "Social Media", "Sponsorships", "Clients", "Contractors/Suppliers", "Business Risk & Liability", "Contractor Prequalification", "Cybersecurity", "ESG & Sustainability", "Health & Safety", "Supply Chain Risk", "Worker Compliance"]
-# tools = ["FullStory", "Google Analytics", "Hotjar", "Convert"]
-# elements = ["Images", "Copy", "Layout", "Design", "Video", "Functional", "Navigation"]
-# research_types = ["General", "Data Analysis", "User Study", "Survey", "A/B (Split Test)", "Market Research"]
-
 # Function to find keywords in the summary text
-
 def check_keywords(text, keyword_list):
     selected_keywords = []
+    text_lower = text.lower()
     for keyword in keyword_list:
-        # Check if any part of the keyword exists in the text
-        # Convert both to lowercase for case-insensitive matching
-        if keyword.lower() in text.lower():
+        # Convert keyword to lowercase for case-insensitive matching
+        keyword_lower = keyword.lower()
+        # Check if any part of the keyword exists in the text using a fuzzy or partial match
+        if re.search(r'\b' + re.escape(keyword_lower) + r'\b', text_lower):
+            selected_keywords.append(keyword)
+        elif keyword_lower in text_lower:  # If exact phrase or partial word match
             selected_keywords.append(keyword)
     return selected_keywords
-
 
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
