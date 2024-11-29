@@ -12,22 +12,18 @@ stemmer = PorterStemmer()
 def check_keywords(text, keyword_list):
     selected_keywords = []
     text_lower = text.lower()
-    # Stem the entire text into a list of stemmed words
+    
+    # Stem the entire text into a list of stemmed words for single-word matching
     text_words = [stemmer.stem(word) for word in text_lower.split()]
     
     for keyword in keyword_list:
         keyword_lower = keyword.lower()
-        # Stem each word in the keyword
-        keyword_stems = [stemmer.stem(word) for word in keyword_lower.split()]
         
-        # Exact match with word boundaries
-        if re.search(r'\b' + re.escape(keyword_lower) + r'\b', text_lower):
+        # Handle multi-word keywords by checking if the exact phrase exists in the text
+        if keyword_lower in text_lower:
             selected_keywords.append(keyword)
-        # Match if ANY stemmed word from the keyword exists in the stemmed text
-        elif any(stem in text_words for stem in keyword_stems):
-            selected_keywords.append(keyword)
-        # Match if ANY word in the keyword exists in the text
-        elif any(word in text_lower for word in keyword_lower.split()):
+        # If the keyword has multiple words, check each word in the keyword
+        elif any(stemmer.stem(word) in text_words for word in keyword_lower.split()):
             selected_keywords.append(keyword)
     
     return selected_keywords
