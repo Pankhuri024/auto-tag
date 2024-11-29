@@ -1,21 +1,37 @@
 from flask import Flask, request, jsonify
 import re
-
+from nltk.stem import PorterStemmer
 app = Flask(__name__)
+
+
+
+# Initialize stemmer
+stemmer = PorterStemmer()
 
 # Function to find keywords in the summary text
 def check_keywords(text, keyword_list):
     selected_keywords = []
     text_lower = text.lower()
+    # Stem the entire text into a list of stemmed words
+    text_words = [stemmer.stem(word) for word in text_lower.split()]
+    
     for keyword in keyword_list:
-        # Convert keyword to lowercase for case-insensitive matching
         keyword_lower = keyword.lower()
-        # Check if any part of the keyword exists in the text using a fuzzy or partial match
+        # Stem each word in the keyword
+        keyword_stems = [stemmer.stem(word) for word in keyword_lower.split()]
+        
+        # Exact match with word boundaries
         if re.search(r'\b' + re.escape(keyword_lower) + r'\b', text_lower):
             selected_keywords.append(keyword)
-        elif keyword_lower in text_lower:  # If exact phrase or partial word match
+        # Match if ANY stemmed word from the keyword exists in the stemmed text
+        elif any(stem in text_words for stem in keyword_stems):
             selected_keywords.append(keyword)
+        # Match if ANY word in the keyword exists in the text
+        elif any(word in text_lower for word in keyword_lower.split()):
+            selected_keywords.append(keyword)
+    
     return selected_keywords
+
 
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
