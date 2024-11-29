@@ -8,6 +8,7 @@ app = Flask(__name__)
 # Initialize stemmer
 stemmer = PorterStemmer()
 
+
 # Function to find keywords in the summary text
 def check_keywords(text, keyword_list):
     selected_keywords = []
@@ -19,11 +20,11 @@ def check_keywords(text, keyword_list):
     for keyword in keyword_list:
         keyword_lower = keyword.lower()
         
-        # Handle multi-word keywords by checking if the exact phrase exists in the text
+        # Check if the entire keyword phrase (multi-word) exists as an exact match in the text
         if keyword_lower in text_lower:
             selected_keywords.append(keyword)
-        # If the keyword has multiple words, check each word in the keyword
-        elif any(stemmer.stem(word) in text_words for word in keyword_lower.split()):
+        # If the keyword has multiple words, check each word separately
+        elif all(stemmer.stem(word) in text_words for word in keyword_lower.split()):
             selected_keywords.append(keyword)
     
     return selected_keywords
