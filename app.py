@@ -2,10 +2,10 @@ from flask import Flask, request, jsonify
 import re
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
-import nltk
-
 app = Flask(__name__)
 
+
+import nltk
 # Initialize stemmer
 stemmer = PorterStemmer()
 nltk.download('stopwords')
@@ -13,8 +13,9 @@ nltk.download('stopwords')
 # Get a list of English stopwords
 stop_words = set(stopwords.words('english'))
 
+
 # Function to find keywords in the summary text
-def check_keywords(text, keyword_list, synonyms_map=None):
+def check_keywords(text, keyword_list):
     selected_keywords = []
     text_lower = text.lower()
     
@@ -23,30 +24,21 @@ def check_keywords(text, keyword_list, synonyms_map=None):
     
     for keyword in keyword_list:
         keyword_lower = keyword.lower()
+        
         keyword_words = [word for word in keyword_lower.split() if word not in stop_words]
+        
+        # Stem the filtered keyword words
         keyword_stems = [stemmer.stem(word) for word in keyword_words]
         
         # Check if the entire keyword phrase (multi-word) exists as an exact match in the text
         if keyword_lower in text_lower:
             selected_keywords.append(keyword)
-            continue
-        
         # Match if ALL stemmed words in the multi-word keyword exist in the text (excluding stopwords)
-        if all(stem in text_words for stem in keyword_stems):
+        elif all(stem in text_words for stem in keyword_stems):
             selected_keywords.append(keyword)
-            continue
-        
-        # Check synonyms if a mapping is provided
-        if synonyms_map and keyword in synonyms_map:
-            synonyms = synonyms_map[keyword]
-            # Stem synonyms and match against text
-            for synonym in synonyms:
-                synonym_words = synonym.lower().split()
-                synonym_stems = [stemmer.stem(word) for word in synonym_words if word not in stop_words]
-                # Match if any stem of the synonym exists in the text
-                if any(stem in text_words for stem in synonym_stems):
-                    selected_keywords.append(keyword)
-                    break
+        # Match if ANY single word from the keyword exists in the text (excluding stopwords)
+        elif any(stem in text_words for stem in keyword_stems):
+            selected_keywords.append(keyword)
     
     return selected_keywords
 
@@ -68,22 +60,12 @@ def process_insight():
         if not summary:
             return jsonify({"error": "Summary text is required"}), 400
 
-        # Define synonyms for research types
-        synonyms_map = {
-            "A/B split test": ["ab", "split test", "a/b", "testing", "tested", "ab split", "tests"],
-            "Survey": ["questionnaire", "poll"],
-            "User Study": ["user research", "user analysis"],
-            "Data Analysis": ["data processing", "data insights"],
-            "General": ["general study", "overview"],
-            "Market Research": ["market analysis", "industry research"],
-        }
-
         # Check for keywords in the provided summary
         selected_categories = check_keywords(summary, categories)
         selected_elements = check_keywords(summary, elements)
         selected_tools = check_keywords(summary, tools)
         selected_goals = check_keywords(summary, goals)
-        selected_research_types = check_keywords(summary, research_types, synonyms_map)
+        selected_research_types = check_keywords(summary, research_types)
         selected_industries = check_keywords(summary, industries)
 
         # Return the auto-selected values
