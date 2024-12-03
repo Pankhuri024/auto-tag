@@ -2,10 +2,10 @@ from flask import Flask, request, jsonify
 import re
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
+import nltk
+
 app = Flask(__name__)
 
-
-import nltk
 # Initialize stemmer
 stemmer = PorterStemmer()
 nltk.download('stopwords')
@@ -13,23 +13,36 @@ nltk.download('stopwords')
 # Get a list of English stopwords
 stop_words = set(stopwords.words('english'))
 
+# Define keyword synonyms
+keyword_mapping = {
+    "A/B (Split Test)": ["test", "testing", "tested", "A/B", "AB"],
+}
+
+# Function to preprocess keywords based on mappings
+def preprocess_keywords(keywords, mapping):
+    expanded_keywords = []
+    for keyword in keywords:
+        expanded_keywords.append(keyword)  # Add the main keyword
+        if keyword in mapping:
+            expanded_keywords.extend(mapping[keyword])  # Add synonyms
+    return list(set(expanded_keywords))  # Remove duplicates
 
 # Function to find keywords in the summary text
 def check_keywords(text, keyword_list):
     selected_keywords = []
     text_lower = text.lower()
-    
+
     # Stem the entire text into a list of stemmed words for single-word matching
     text_words = [stemmer.stem(word) for word in text_lower.split()]
-    
+
     for keyword in keyword_list:
         keyword_lower = keyword.lower()
-        
+
         keyword_words = [word for word in keyword_lower.split() if word not in stop_words]
-        
+
         # Stem the filtered keyword words
         keyword_stems = [stemmer.stem(word) for word in keyword_words]
-        
+
         # Check if the entire keyword phrase (multi-word) exists as an exact match in the text
         if keyword_lower in text_lower:
             selected_keywords.append(keyword)
@@ -39,9 +52,8 @@ def check_keywords(text, keyword_list):
         # Match if ANY single word from the keyword exists in the text (excluding stopwords)
         elif any(stem in text_words for stem in keyword_stems):
             selected_keywords.append(keyword)
-    
-    return selected_keywords
 
+    return selected_keywords
 
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
@@ -59,6 +71,9 @@ def process_insight():
 
         if not summary:
             return jsonify({"error": "Summary text is required"}), 400
+
+        # Expand research types with synonyms
+        research_types = preprocess_keywords(research_types, keyword_mapping)
 
         # Check for keywords in the provided summary
         selected_categories = check_keywords(summary, categories)
