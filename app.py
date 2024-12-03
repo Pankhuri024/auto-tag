@@ -4,7 +4,6 @@ from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 app = Flask(__name__)
 
-
 import nltk
 # Initialize stemmer
 stemmer = PorterStemmer()
@@ -13,8 +12,13 @@ nltk.download('stopwords')
 # Get a list of English stopwords
 stop_words = set(stopwords.words('english'))
 
+# Synonym mapping for research types
+RESEARCH_TYPE_SYNONYMS = {
+    "A/B (split test)": ["test", "experiment", "split test", "ab test"],
+    # Add more research types and their synonyms here
+}
 
-# Function to find keywords in the summary text
+# Function to normalize text
 def clean_text(text):
     """Normalize text by removing special characters and extra spaces."""
     # Replace special characters with a space
@@ -23,7 +27,8 @@ def clean_text(text):
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
-def check_keywords(text, keyword_list):
+# Function to find keywords in the summary text
+def check_keywords(text, keyword_list, synonyms=None):
     selected_keywords = []
     text_clean = clean_text(text.lower())  # Clean and lowercase the text
     
@@ -46,9 +51,15 @@ def check_keywords(text, keyword_list):
         # Match if ANY single word from the keyword exists in the text (excluding stopwords)
         elif any(stem in text_words for stem in keyword_stems):
             selected_keywords.append(keyword)
+        
+        # Check for synonyms if provided
+        if synonyms and keyword in synonyms:
+            synonym_list = synonyms[keyword]
+            synonym_stems = {stemmer.stem(clean_text(synonym.lower())) for synonym in synonym_list}
+            if any(synonym_stem in text_words for synonym_stem in synonym_stems):
+                selected_keywords.append(keyword)
     
     return selected_keywords
-
 
 
 @app.route('/process_insight', methods=['POST'])
@@ -73,7 +84,7 @@ def process_insight():
         selected_elements = check_keywords(summary, elements)
         selected_tools = check_keywords(summary, tools)
         selected_goals = check_keywords(summary, goals)
-        selected_research_types = check_keywords(summary, research_types)
+        selected_research_types = check_keywords(summary, research_types, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_industries = check_keywords(summary, industries)
 
         # Return the auto-selected values
