@@ -13,60 +13,70 @@ nltk.download('stopwords')
 # Get a list of English stopwords
 stop_words = set(stopwords.words('english'))
 
-# Define keyword synonyms for research types
-keyword_mapping = {
-    "A/B (Split Test)": ["test", "testing", "tested", "A/B", "AB"],
-}
-
-# Function to expand only research types with synonyms
-def expand_research_types(research_types, keyword_mapping):
-    expanded_keywords = []
-    for keyword in research_types:
-        expanded_keywords.append(keyword)
-        if keyword in keyword_mapping:
-            expanded_keywords.extend(keyword_mapping[keyword])
-    return list(set(expanded_keywords))  # Remove duplicates
-
 # Function to find keywords in the summary text
-def check_keywords(text, keyword_list):
+def check_keywords(text, keyword_list, synonyms_map=None):
     selected_keywords = []
     text_lower = text.lower()
+    
+    # Stem the entire text into a list of stemmed words for single-word matching
     text_words = [stemmer.stem(word) for word in text_lower.split()]
-
+    
     for keyword in keyword_list:
         keyword_lower = keyword.lower()
         keyword_words = [word for word in keyword_lower.split() if word not in stop_words]
         keyword_stems = [stemmer.stem(word) for word in keyword_words]
-
-        # Check for exact match, all words match, or any word match
+        
+        # Check if the entire keyword phrase (multi-word) exists as an exact match in the text
         if keyword_lower in text_lower:
             selected_keywords.append(keyword)
+        # Match if ALL stemmed words in the multi-word keyword exist in the text (excluding stopwords)
         elif all(stem in text_words for stem in keyword_stems):
             selected_keywords.append(keyword)
+        # Match if ANY single word from the keyword exists in the text (excluding stopwords)
         elif any(stem in text_words for stem in keyword_stems):
             selected_keywords.append(keyword)
-
+        # Check synonyms if a mapping is provided
+        elif synonyms_map and keyword in synonyms_map:
+            synonyms = synonyms_map[keyword]
+            if any(synonym in text_lower for synonym in synonyms):
+                selected_keywords.append(keyword)
+    
     return selected_keywords
 
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
     try:
         data = request.get_json()
-        summary = data.get('summary', '')
+        summary = data.get('summary', '')  # Default to empty string if not provided
+
+        # Use the predefined values if they are not passed in the request
+        goals = data.get('goals', [])
+        categories = data.get('categories', [])
+        tools = data.get('tools', [])
+        elements = data.get('elements', [])
+        research_types = data.get('research_types', [])
+        industries = data.get('industries', [])
 
         if not summary:
             return jsonify({"error": "Summary text is required"}), 400
 
-        # Expand only research types with synonyms
-        research_types = expand_research_types(data.get('research_types', []), keyword_mapping)
+        # Define synonyms for research types
+        synonyms_map = {
+            "A/B split test": ["ab", "split test", "a b", "testing", "tested", "ab split", "texts"],
+            "Survey": ["questionnaire", "poll"],
+            "User Study": ["user research", "user analysis"],
+            "Data Analysis": ["data processing", "data insights"],
+            "General": ["general study", "overview"],
+            "Market Research": ["market analysis", "industry research"],
+        }
 
         # Check for keywords in the provided summary
-        selected_research_types = check_keywords(summary, research_types)
-        selected_categories = check_keywords(summary, data.get('categories', []))
-        selected_elements = check_keywords(summary, data.get('elements', []))
-        selected_tools = check_keywords(summary, data.get('tools', []))
-        selected_goals = check_keywords(summary, data.get('goals', []))
-        selected_industries = check_keywords(summary, data.get('industries', []))
+        selected_categories = check_keywords(summary, categories)
+        selected_elements = check_keywords(summary, elements)
+        selected_tools = check_keywords(summary, tools)
+        selected_goals = check_keywords(summary, goals)
+        selected_research_types = check_keywords(summary, research_types, synonyms_map)
+        selected_industries = check_keywords(summary, industries)
 
         # Return the auto-selected values
         return jsonify({
