@@ -39,11 +39,17 @@ def check_keywords(text, keyword_list, synonyms_map=None):
         # Check synonyms if a mapping is provided
         if synonyms_map and keyword in synonyms_map:
             synonyms = synonyms_map[keyword]
-            if any(synonym.lower() in text_lower for synonym in synonyms):
-                selected_keywords.append(keyword)
-                continue
+            # Stem synonyms and match against text
+            for synonym in synonyms:
+                synonym_words = synonym.lower().split()
+                synonym_stems = [stemmer.stem(word) for word in synonym_words if word not in stop_words]
+                # Match if any stem of the synonym exists in the text
+                if any(stem in text_words for stem in synonym_stems):
+                    selected_keywords.append(keyword)
+                    break
     
     return selected_keywords
+
 
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
