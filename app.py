@@ -15,7 +15,13 @@ stop_words = set(stopwords.words('english'))
 
 
 # Function to find keywords in the summary text
+# Function to find keywords in the summary text
 def check_keywords(text, keyword_list):
+    # Define synonyms/variations for specific keywords
+    keyword_variations = {
+        "A/B (split test)": ["test", "testing", "tested", "a/b", "ab", "split test"]
+    }
+    
     selected_keywords = []
     text_lower = text.lower()
     
@@ -25,21 +31,26 @@ def check_keywords(text, keyword_list):
     for keyword in keyword_list:
         keyword_lower = keyword.lower()
         
-        keyword_words = [word for word in keyword_lower.split() if word not in stop_words]
+        # Check if the keyword has defined variations
+        variations = keyword_variations.get(keyword, [])
         
-        # Stem the filtered keyword words
-        keyword_stems = [stemmer.stem(word) for word in keyword_words]
+        # Include the main keyword and its variations in the matching logic
+        variation_matches = [keyword_lower] + [var.lower() for var in variations]
         
-        # Check if the entire keyword phrase (multi-word) exists as an exact match in the text
-        if keyword_lower in text_lower:
+        # Match exact phrases
+        if any(var in text_lower for var in variation_matches):
             selected_keywords.append(keyword)
-        # Match if ALL stemmed words in the multi-word keyword exist in the text (excluding stopwords)
-        elif all(stem in text_words for stem in keyword_stems):
-            selected_keywords.append(keyword)
-        # Match if ANY single word from the keyword exists in the text (excluding stopwords)
-        elif any(stem in text_words for stem in keyword_stems):
-            selected_keywords.append(keyword)
-    
+            continue
+
+        # For multi-word variations, stem each word and check
+        for var in variation_matches:
+            var_words = [word for word in var.split() if word not in stop_words]
+            var_stems = [stemmer.stem(word) for word in var_words]
+            
+            # Check if ALL stemmed words in the variation exist in the text
+            if all(stem in text_words for stem in var_stems):
+                selected_keywords.append(keyword)
+                break
     return selected_keywords
 
 
