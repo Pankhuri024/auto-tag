@@ -15,23 +15,30 @@ stop_words = set(stopwords.words('english'))
 
 
 # Function to find keywords in the summary text
+def clean_text(text):
+    """Normalize text by removing special characters and extra spaces."""
+    # Replace special characters with a space
+    text = re.sub(r'[^\w\s]', ' ', text)
+    # Remove multiple spaces
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
 def check_keywords(text, keyword_list):
     selected_keywords = []
-    text_lower = text.lower()
+    text_clean = clean_text(text.lower())  # Clean and lowercase the text
     
-    # Stem the entire text into a list of stemmed words for single-word matching
-    text_words = [stemmer.stem(word) for word in text_lower.split()]
+    # Stem the cleaned text into a list of stemmed words
+    text_words = [stemmer.stem(word) for word in text_clean.split()]
     
     for keyword in keyword_list:
-        keyword_lower = keyword.lower()
+        keyword_clean = clean_text(keyword.lower())  # Clean and lowercase the keyword
         
-        keyword_words = [word for word in keyword_lower.split() if word not in stop_words]
-        
-        # Stem the filtered keyword words
+        # Split and stem the cleaned keyword words
+        keyword_words = [word for word in keyword_clean.split() if word not in stop_words]
         keyword_stems = [stemmer.stem(word) for word in keyword_words]
         
-        # Check if the entire keyword phrase (multi-word) exists as an exact match in the text
-        if keyword_lower in text_lower:
+        # Check if the entire cleaned keyword phrase exists in the text
+        if keyword_clean in text_clean:
             selected_keywords.append(keyword)
         # Match if ALL stemmed words in the multi-word keyword exist in the text (excluding stopwords)
         elif all(stem in text_words for stem in keyword_stems):
@@ -41,6 +48,7 @@ def check_keywords(text, keyword_list):
             selected_keywords.append(keyword)
     
     return selected_keywords
+
 
 
 @app.route('/process_insight', methods=['POST'])
