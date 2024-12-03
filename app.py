@@ -38,7 +38,7 @@ def check_keywords(text, keyword_list, synonyms_map=None):
         # Check synonyms if a mapping is provided
         elif synonyms_map and keyword in synonyms_map:
             synonyms = synonyms_map[keyword]
-            if any(synonym in text_lower for synonym in synonyms):
+            if any(synonym.lower() in text_lower for synonym in synonyms):
                 selected_keywords.append(keyword)
     
     return selected_keywords
@@ -62,12 +62,12 @@ def process_insight():
 
         # Define synonyms for research types
         synonyms_map = {
-            "A/B split test": ["AB", "split test", "AB", "testing", "tested", "A/B split", "tests"],
-            "Survey": ["", ""],
-            "User Study": ["", ""],
-            "Data Analysis": ["", ""],
-            "General": ["", ""],
-            "Market Research": ["", ""],
+            "A/B split test": ["ab", "split test", "a/b", "testing", "tested", "ab split", "tests"],
+            "Survey": ["questionnaire", "poll"],
+            "User Study": ["user research", "user analysis"],
+            "Data Analysis": ["data processing", "data insights"],
+            "General": ["general study", "overview"],
+            "Market Research": ["market analysis", "industry research"],
         }
 
         # Check for keywords in the provided summary
