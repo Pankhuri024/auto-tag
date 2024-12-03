@@ -14,7 +14,7 @@ stop_words = set(stopwords.words('english'))
 
 # Synonym mapping for research types
 RESEARCH_TYPE_SYNONYMS = {
-    "A/B (split test)": ["test", "experiment", "split test", "ab test"],
+    "A/B (Split Test)": ["test", "experiment", "split test", "ab test"],
     # Add more research types and their synonyms here
 }
 
