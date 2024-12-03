@@ -29,17 +29,19 @@ def check_keywords(text, keyword_list, synonyms_map=None):
         # Check if the entire keyword phrase (multi-word) exists as an exact match in the text
         if keyword_lower in text_lower:
             selected_keywords.append(keyword)
+            continue
+        
         # Match if ALL stemmed words in the multi-word keyword exist in the text (excluding stopwords)
-        elif all(stem in text_words for stem in keyword_stems):
+        if all(stem in text_words for stem in keyword_stems):
             selected_keywords.append(keyword)
-        # Match if ANY single word from the keyword exists in the text (excluding stopwords)
-        elif any(stem in text_words for stem in keyword_stems):
-            selected_keywords.append(keyword)
+            continue
+        
         # Check synonyms if a mapping is provided
-        elif synonyms_map and keyword in synonyms_map:
+        if synonyms_map and keyword in synonyms_map:
             synonyms = synonyms_map[keyword]
             if any(synonym.lower() in text_lower for synonym in synonyms):
                 selected_keywords.append(keyword)
+                continue
     
     return selected_keywords
 
