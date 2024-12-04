@@ -15,6 +15,7 @@ stop_words = set(stopwords.words('english'))
 # Synonym mapping for research types
 RESEARCH_TYPE_SYNONYMS = {
     "A/B (Split Test)": [ "experiment"],
+    "User Study": ["user study", "user research", 'usability study', 'usability research', 'customer research', 'customer interview', "stakeholder interview"]
     # Add more research types and their synonyms here
 }
 
@@ -48,9 +49,10 @@ def check_keywords(text, keyword_list, synonyms=None):
         # Match if ALL stemmed words in the multi-word keyword exist in the text (excluding stopwords)
         elif all(stem in text_words for stem in keyword_stems):
             selected_keywords.append(keyword)
-        # Match if ANY single word from the keyword exists in the text (excluding stopwords)
-        elif any(stem in text_words for stem in keyword_stems):
-            selected_keywords.append(keyword)
+            # not for user
+        # # Match if ANY single word from the keyword exists in the text (excluding stopwords)
+        # elif any(stem in text_words for stem in keyword_stems):
+        #     selected_keywords.append(keyword)
         
         # Check for synonyms if provided
         if synonyms and keyword in synonyms:
