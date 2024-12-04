@@ -99,10 +99,10 @@ def process_insight():
             return jsonify({"error": "Summary text is required"}), 400
 
         # Check for keywords in the provided summary
-        selected_categories = check_keywords(summary, categories, synonyms=RESEARCH_TYPE_SYNONYMS)
+        selected_categories = check_keywords(summary, categories)
         selected_elements = check_keywords(summary, elements)
         selected_tools = check_keywords(summary, tools)
-        selected_goals = check_keywords(summary, goals)
+        selected_goals = check_keywords(summary, goals, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_research_types = check_keywords(summary, research_types, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_industries = check_keywords(summary, industries)
 
