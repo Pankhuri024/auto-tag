@@ -16,7 +16,8 @@ stop_words = set(stopwords.words('english'))
 RESEARCH_TYPE_SYNONYMS = {
     "A/B (Split Test)": [ "experiment","tests","test", "testing", "A/B", "AB test"],
     "User Study": [ "user research", "usability study", "usability research"],
-    "Market Research": [ "customer research", "customer interview", "stakeholder interview"]
+    "Market Research": [ "customer research", "customer interview", "stakeholder interview"],
+    "Lead Generation": [ "drove leads" ]
 
     # Add more research types and their synonyms here
 }
@@ -98,7 +99,7 @@ def process_insight():
             return jsonify({"error": "Summary text is required"}), 400
 
         # Check for keywords in the provided summary
-        selected_categories = check_keywords(summary, categories)
+        selected_categories = check_keywords(summary, categories, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_elements = check_keywords(summary, elements)
         selected_tools = check_keywords(summary, tools)
         selected_goals = check_keywords(summary, goals)
