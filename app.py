@@ -15,7 +15,9 @@ stop_words = set(stopwords.words('english'))
 # Synonym mapping for research types
 RESEARCH_TYPE_SYNONYMS = {
     "A/B (Split Test)": [ "experiment","tests","test", "testing", "A/B", "AB test"],
-    "User Study": ["user study", "user research", "usability study", "usability research", "customer research", "customer interview", "stakeholder interview"]
+    "User Study": [ "user research", "usability study", "usability research", "customer research", "customer interview", "stakeholder interview"],
+    "Market Research": [ "customer research", "customer interview", "stakeholder interview"]
+
     # Add more research types and their synonyms here
 }
 
