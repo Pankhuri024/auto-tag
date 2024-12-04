@@ -17,7 +17,7 @@ RESEARCH_TYPE_SYNONYMS = {
     "A/B (Split Test)": [ "experiment","tests","test", "testing", "A/B", "AB test"],
     "User Study": [ "user research", "usability study", "usability research"],
     "Market Research": [ "customer research", "customer interview", "stakeholder interview"],
-    "Lead Generation": [ "drove leads" ]
+    "Lead generation": [ "drove leads" ]
 
     # Add more research types and their synonyms here
 }
@@ -38,6 +38,8 @@ def check_keywords(text, keyword_list, synonyms=None):
     
     # Stem the cleaned text into a list of stemmed words
     text_words = [stemmer.stem(word) for word in text_clean.split()]
+    # List of words that should not be matched by their stemmed version (e.g., "research")
+    excluded_words = {"research", "researching", "researched", "searched"}  # Add any other unwanted words here
     
     for keyword in keyword_list:
         keyword_clean = clean_text(keyword.lower())  # Clean and lowercase the keyword
@@ -50,7 +52,7 @@ def check_keywords(text, keyword_list, synonyms=None):
         if keyword_clean in text_clean:
             selected_keywords.append(keyword)
         # Match if ALL stemmed words in the multi-word keyword exist in the text (excluding stopwords)
-        elif all(stem in text_words for stem in keyword_stems):
+        elif all(stem in text_words for stem in keyword_stems) and not any(word in excluded_words for word in keyword_stems):
             selected_keywords.append(keyword)
             # not for user
         # # Match if ANY single word from the keyword exists in the text (excluding stopwords)
@@ -73,7 +75,7 @@ def check_keywords(text, keyword_list, synonyms=None):
                 
                 # Stem the synonym for partial matching
                 synonym_words = [stemmer.stem(word) for word in synonym_clean.split() if word not in stop_words]
-                if all(stem in text_words for stem in synonym_words):
+                if all(stem in text_words for stem in synonym_words) and not any(word in excluded_words for word in synonym_words):
                     selected_keywords.append(keyword)
                     break
 
