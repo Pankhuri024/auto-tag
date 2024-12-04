@@ -14,8 +14,8 @@ stop_words = set(stopwords.words('english'))
 
 # Synonym mapping for research types
 RESEARCH_TYPE_SYNONYMS = {
-    "A/B (Split Test)": [ "experiment"],
-    "User Study": ["user study", "user research", 'usability study', 'usability research', 'customer research', 'customer interview', "stakeholder interview"]
+    "A/B (Split Test)": [ "experiment","tests","test", "testing", "A/B", "AB test"],
+    "User Study": ["user study", "user research", "usability study", "usability research", "customer research", "customer interview", "stakeholder interview"]
     # Add more research types and their synonyms here
 }
 
@@ -55,11 +55,25 @@ def check_keywords(text, keyword_list, synonyms=None):
         #     selected_keywords.append(keyword)
         
         # Check for synonyms if provided
+        # Check for synonyms if provided
         if synonyms and keyword in synonyms:
             synonym_list = synonyms[keyword]
-            synonym_stems = {stemmer.stem(clean_text(synonym.lower())) for synonym in synonym_list}
-            if any(synonym_stem in text_words for synonym_stem in synonym_stems):
-                selected_keywords.append(keyword)
+            
+            # Loop through each synonym
+            for synonym in synonym_list:
+                synonym_clean = clean_text(synonym.lower())
+                
+                # Check if synonym exists as a whole phrase
+                if synonym_clean in text_clean:
+                    selected_keywords.append(keyword)
+                    break  # Avoid duplicate additions
+                
+                # Stem the synonym for partial matching
+                synonym_words = [stemmer.stem(word) for word in synonym_clean.split() if word not in stop_words]
+                if all(stem in text_words for stem in synonym_words):
+                    selected_keywords.append(keyword)
+                    break
+
     
     return selected_keywords
 
