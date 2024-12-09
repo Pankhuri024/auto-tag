@@ -19,7 +19,7 @@ RESEARCH_TYPE_SYNONYMS = {
     "Market Research": [ "customer research", "customer interview", "stakeholder interview"],
     "Lead generation": [ "drove leads" ],
     "Copy": ["messaging framework", "copy", "messaging"],
-    "eCommerce": ["orders per visitor", "orders", "online orders", "average order value", "revenue per visitor", "online purchases", "purchases","discounted"],
+    "Ecommerce": ["orders per visitor", "orders", "online orders", "average order value", "revenue per visitor", "online purchases", "purchases","discounted"],
     "Data Analysis": ["gradually increasing", "gradually decreasing", "order trend", "purchase trend", "purchasing trend"]
 
     # Add more research types and their synonyms here
