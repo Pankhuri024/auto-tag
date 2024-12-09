@@ -17,7 +17,10 @@ RESEARCH_TYPE_SYNONYMS = {
     "A/B (Split Test)": [ "experiment","tests","test", "testing", "A/B", "AB test"],
     "User Study": [ "user research", "usability study", "usability research"],
     "Market Research": [ "customer research", "customer interview", "stakeholder interview"],
-    "Lead generation": [ "drove leads" ]
+    "Lead generation": [ "drove leads" ],
+    "Copy": ["messaging framework", "copy", "messaging"],
+    "eCommerce": ["orders per visitor", "orders", "online orders", "average order value", "revenue per visitor", "online purchases", "purchases","discounted"],
+    "Data Analysis": ["gradually increasing", "gradually decreasing", "order trend", "purchase trend", "purchasing trend"]
 
     # Add more research types and their synonyms here
 }
@@ -102,7 +105,7 @@ def process_insight():
 
         # Check for keywords in the provided summary
         selected_categories = check_keywords(summary, categories)
-        selected_elements = check_keywords(summary, elements)
+        selected_elements = check_keywords(summary, elements, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_tools = check_keywords(summary, tools)
         selected_goals = check_keywords(summary, goals, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_research_types = check_keywords(summary, research_types, synonyms=RESEARCH_TYPE_SYNONYMS)
