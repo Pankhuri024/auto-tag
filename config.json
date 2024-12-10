@@ -1,0 +1,37 @@
+{
+  "research_type_synonyms": {
+    "A/B (Split Test)": [
+      "experiment",
+      "tests",
+      "test",
+      "testing",
+      "A/B",
+      "AB test"
+    ],
+    "User Study": ["user research", "usability study", "usability research"],
+    "Market Research": [
+      "customer research",
+      "customer interview",
+      "stakeholder interview"
+    ],
+    "Lead generation": ["drove leads"],
+    "Copy": ["messaging framework", "messaging"],
+    "Ecommerce": [
+      "orders per visitor",
+      "orders",
+      "online orders",
+      "average order value",
+      "revenue per visitor",
+      "online purchases",
+      "purchases",
+      "discounted"
+    ],
+    "Data Analysis": [
+      "gradually increasing",
+      "gradually decreasing",
+      "order trend",
+      "purchase trend",
+      "purchasing trend"
+    ]
+  }
+}
