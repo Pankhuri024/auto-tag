@@ -18,6 +18,7 @@ stop_words = set(stopwords.words('english'))
 try:
     with open("config.json", "r") as file:
         RESEARCH_TYPE_SYNONYMS = json.load(file)
+        print("Loaded config.json content:", json.dumps(RESEARCH_TYPE_SYNONYMS, indent=4))
 except Exception as e:
     RESEARCH_TYPE_SYNONYMS = {}
     print(f"Error loading config.json: {e}")
@@ -51,10 +52,19 @@ def check_keywords(text, keyword_list, synonyms=None):
         # Check for synonyms if provided
         if synonyms and keyword in synonyms:
             synonym_list = synonyms[keyword]
+            
+            # Loop through each synonym
             for synonym in synonym_list:
                 synonym_clean = clean_text(synonym.lower())
+                
+                # Check if synonym exists as a whole phrase
+                if synonym_clean in text_clean:
+                    selected_keywords.append(keyword)
+                    break  # Avoid duplicate additions
+                
+                # Stem the synonym for partial matching
                 synonym_words = [stemmer.stem(word) for word in synonym_clean.split() if word not in stop_words]
-                if synonym_clean in text_clean or all(stem in text_words for stem in synonym_words):
+                if all(stem in text_words for stem in synonym_words) and not any(word in excluded_words for word in synonym_words):
                     selected_keywords.append(keyword)
                     break
     
