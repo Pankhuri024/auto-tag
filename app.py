@@ -17,7 +17,8 @@ stop_words = set(stopwords.words('english'))
 # Load synonyms from config.json dynamically
 try:
     with open("config.json", "r") as file:
-        RESEARCH_TYPE_SYNONYMS = json.load(file)
+        config_data  = json.load(file)
+        RESEARCH_TYPE_SYNONYMS = config_data.get("research_type_synonyms", {})
         print("Loaded config.json content:", json.dumps(RESEARCH_TYPE_SYNONYMS, indent=4))
 except Exception as e:
     RESEARCH_TYPE_SYNONYMS = {}
