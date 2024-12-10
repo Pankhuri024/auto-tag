@@ -23,6 +23,7 @@ try:
 except Exception as e:
     RESEARCH_TYPE_SYNONYMS = {}
     print(f"Error loading config.json: {e}")
+    
 
 # Function to normalize text
 def clean_text(text):
