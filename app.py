@@ -23,7 +23,7 @@ try:
 except Exception as e:
     RESEARCH_TYPE_SYNONYMS = {}
     print(f"Error loading config.json: {e}")
-    
+
 
 # Function to normalize text
 def clean_text(text):
@@ -39,16 +39,17 @@ def check_keywords(text, keyword_list, synonyms=None):
     
     # Stem the cleaned text into a list of stemmed words
     text_words = [stemmer.stem(word) for word in text_clean.split()]
-    excluded_words = {"research", "researching", "researched", "searched"}  # Add any other unwanted words here
-    
+    excluded_stems = {stemmer.stem(word) for word in {"research", "researching", "researched", "searched"}}  # Stem excluded words
+
     for keyword in keyword_list:
         keyword_clean = clean_text(keyword.lower())  # Clean and lowercase the keyword
         keyword_words = [word for word in keyword_clean.split() if word not in stop_words]
         keyword_stems = [stemmer.stem(word) for word in keyword_words]
 
+        # Match whole phrase or all stems but exclude unwanted words
         if keyword_clean in text_clean:
             selected_keywords.append(keyword)
-        elif all(stem in text_words for stem in keyword_stems) and not any(word in excluded_words for word in keyword_stems):
+        elif all(stem in text_words for stem in keyword_stems) and not any(stem in excluded_stems for stem in keyword_stems):
             selected_keywords.append(keyword)
 
         # Check for synonyms if provided
@@ -66,11 +67,12 @@ def check_keywords(text, keyword_list, synonyms=None):
                 
                 # Stem the synonym for partial matching
                 synonym_words = [stemmer.stem(word) for word in synonym_clean.split() if word not in stop_words]
-                if all(stem in text_words for stem in synonym_words) and not any(word in excluded_words for word in synonym_words):
+                if all(stem in text_words for stem in synonym_words) and not any(stem in excluded_stems for stem in synonym_words):
                     selected_keywords.append(keyword)
                     break
     
     return selected_keywords
+
 
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
