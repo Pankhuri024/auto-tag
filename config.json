@@ -36,6 +36,6 @@
     "Average Order Value/AOV": ["average order value", "AOV"],
     "Email - Mailchimp": ["MC emails", "Mailchimp", "MC email", "MC"],
     "Email - HubSpot": ["HS email", "HS emails"],
-    "Email - CTR": ["CTR", "CTOR"]
+    "Email CTR": ["CTR", "CTOR"]
   }
 }
