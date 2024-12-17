@@ -104,8 +104,8 @@ def get_primary_metric(summary):
     try:
         # Initialize OpenAI model
         llm = ChatOpenAI(model="gpt-3.5-turbo", api_key=OPENAI_API_KEY)
-        response = llm.invoke(prompt)
-        return response.strip()
+        response = llm(prompt)
+        return response.content
     except Exception as e:
         # Handle API errors or connection issues
         print(f"Error calling OpenAI API: {e}")
