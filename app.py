@@ -77,67 +77,109 @@ def check_keywords(text, keyword_list, synonyms=None):
     
     return selected_keywords
 
-def extract_lift_and_metric_ai(summary, goals):
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    if not OPENAI_API_KEY:
-        return jsonify({'message': 'OPENAI_API_KEY environment variable is not set.'}), 500
-   
-    prompt = f"""
-    Analyze the following summary text to extract percentage changes and metrics related to these goals: {', '.join(goals)}.:
-
-    1. Any percentage change mentioned using these patterns:
-        - x% lift in (or of) y
-        - x% uplift in (or of) y
-        - x% increase in (or of) y
-        - x% improvement in (or of) y
-        - improvement of x% in (or of) y
-        - increase in y of x%
-        - x% uptick in (or of) y
-        - x% higher y
-        - x% more y
-      For these patterns, insert x into the 'Lift' field.
-
-    2. Any percentage change mentioned using these patterns:
-        - x% lower y
-        - x% less y
-        - x% fewer y
-        - increased [...] by x%
-        - improved [...] by x%
-        - boosted [...] by x%
-      For these patterns, insert -x into the 'Lift' field.
-
-    3. Insert y in metric
-
-
-    Text: "{summary}"
-
-    Output format:
-    "[
-       {{ "lift": "+x%", "metric": "y" }},
-        {{ "lift": "-x%", "metric": "y" }}
-        ...
-      ]
+def extract_lift_and_metric(summary, goals):
     """
-    try:
-        # Initialize OpenAI model
-        llm = ChatOpenAI(model="gpt-3.5-turbo", api_key=OPENAI_API_KEY)
-        response = llm(prompt)
-        print("response", response)
-        
-        try:
-            results = json.loads(response.content)
-            valid_results = [
-                item for item in results if "lift" in item and "metric" in item and item["metric"] in goals
-            ]
-            print("results",results)
-            return valid_results
-        except json.JSONDecodeError:
-            valid_results = []
+    Extracts lift (percentage changes) and associated metrics from the summary text.
+    Includes patterns like `x% of y`.
+    """
+    patterns = [
+        # Positive lift patterns
+        (r'(\d+)%\s+(?:lift|uplift|increase|improvement|uptick|higher|more)\s+(?:in|of)\s+([\w\s]+)', '+'),
+        (r'improvement\s+of\s+(\d+)%\s+(?:in|of)\s+([\w\s]+)', '+'),
+        (r'increase\s+in\s+([\w\s]+)\s+of\s+(\d+)%', '+'),
+        (r'(\d+)%\s+(?:increase|boost|gain)\s+in\s+([\w\s]+)', '+'),
+        (r'(\d+)%\s+of\s+([\w\s]+)', '+'),  # Handles "x% of y"
+        # Negative lift patterns
+        (r'(\d+)%\s+(?:lower|less|fewer)\s+([\w\s]+)', '-'),
+        (r'decrease\s+in\s+([\w\s]+)\s+of\s+(\d+)%', '-'),
+        (r'reduction\s+of\s+(\d+)%\s+(?:in|of)\s+([\w\s]+)', '-'),
+        (r'(\d+)%\s+decrease\s+in\s+([\w\s]+)', '-')
+    ]
 
-    except Exception as e:
-        # Handle API errors or connection issues
-        print(f"Error calling OpenAI API: {e}")
-        return None  # Fallback to None if an error occurs
+    results = []
+    for pattern, sign in patterns:
+        matches = re.findall(pattern, summary.lower())
+        for match in matches:
+            if len(match) == 2:
+                # Match with metric first (e.g., "increase in sales of 10%")
+                metric, lift = match[1].strip(), match[0]
+            else:
+                # Match with lift first (e.g., "10% increase in sales")
+                lift, metric = match[0], match[1].strip()
+            
+            # Clean up metric
+            metric_cleaned = " ".join(metric.split())  # Remove extra spaces
+            # Include only metrics that match the provided goals
+            if any(goal.lower() in metric_cleaned for goal in goals):
+                results.append({"lift": f"{sign}{lift}%", "metric": metric_cleaned})
+            
+    print("results",results)
+
+    
+    return results
+
+
+# def extract_lift_and_metric_ai(summary, goals):
+#     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+#     if not OPENAI_API_KEY:
+#         return jsonify({'message': 'OPENAI_API_KEY environment variable is not set.'}), 500
+   
+#     prompt = f"""
+#     Analyze the following summary text to extract percentage changes and metrics related to these goals: {', '.join(goals)}.:
+
+#     1. Any percentage change mentioned using these patterns:
+#         - x% lift in (or of) y
+#         - x% uplift in (or of) y
+#         - x% increase in (or of) y
+#         - x% improvement in (or of) y
+#         - improvement of x% in (or of) y
+#         - increase in y of x%
+#         - x% uptick in (or of) y
+#         - x% higher y
+#         - x% more y
+#       For these patterns, insert x into the 'Lift' field.
+
+#     2. Any percentage change mentioned using these patterns:
+#         - x% lower y
+#         - x% less y
+#         - x% fewer y
+#         - increased [...] by x%
+#         - improved [...] by x%
+#         - boosted [...] by x%
+#       For these patterns, insert -x into the 'Lift' field.
+
+#     3. Insert y in metric
+
+
+#     Text: "{summary}"
+
+#     Output format:
+#     "[
+#        {{ "lift": "+x%", "metric": "y" }},
+#         {{ "lift": "-x%", "metric": "y" }}
+#         ...
+#       ]
+#     """
+#     try:
+#         # Initialize OpenAI model
+#         llm = ChatOpenAI(model="gpt-3.5-turbo", api_key=OPENAI_API_KEY)
+#         response = llm(prompt)
+#         print("response", response)
+        
+#         try:
+#             results = json.loads(response.content)
+#             valid_results = [
+#                 item for item in results if "lift" in item and "metric" in item and item["metric"] in goals
+#             ]
+#             print("results",results)
+#             return valid_results
+#         except json.JSONDecodeError:
+#             valid_results = []
+
+#     except Exception as e:
+#         # Handle API errors or connection issues
+#         print(f"Error calling OpenAI API: {e}")
+#         return None  # Fallback to None if an error occurs
     
 # Function to extract a single confidence level
 def extract_confidence_level(text):
@@ -174,7 +216,7 @@ def process_insight():
         research_types = data.get('research_types', [])
         industries = data.get('industries', [])
         # Extract lift and metric
-        lift_metric_pairs = extract_lift_and_metric_ai(summary, goals)
+        # lift_metric_pairs = extract_lift_and_metric_ai(summary, goals)
    
 
         if not summary:
@@ -187,7 +229,7 @@ def process_insight():
         selected_research_types = check_keywords(summary, research_types, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_industries = check_keywords(summary, industries)
         # Extract lift and metric using regex-based method
-        # lift_metric_pairs = extract_lift_and_metric(summary, goals)
+        lift_metric_pairs = extract_lift_and_metric(summary, goals)
 
         # Separate lifts and metrics
         lift_values = [item['lift'] for item in lift_metric_pairs]
