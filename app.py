@@ -112,8 +112,6 @@ def extract_lift_and_metric_ai(summary, goals):
     Text: "{summary}"
 
     Output format:
-    - Lift: [Percentage]
-    - Metric: [Metric Name]
     "[
        {{ "lift": "+x%", "metric": "y" }},
         {{ "lift": "-x%", "metric": "y" }}
