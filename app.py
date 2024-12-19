@@ -80,18 +80,77 @@ def check_keywords(text, keyword_list, synonyms=None):
 
 import re
 
+# def extract_lift_and_metric(text, goals):
+#     """
+#     Extract lift (x%) and associated metric (y) from the text.
+#     Handles patterns like:
+#     - Positive lift: 
+#       x% lift in (or of) y, x% uplift in (or of) y, x% increase in (or of) y,
+#       x% improvement in (or of) y, improvement of x% in (or of) y,
+#       increase in y of x%, x% higher y, x% uptick in (or of) y, x% more y
+#     - Negative lift: 
+#       x% less y, x% fewer y, increased [...] by x%, improved [...] by x%,
+#       boosted [...] by x%, x% lower y
+#     Returns a list of dictionaries with "lift" and "metric". Filters metrics against a predefined list of goals.
+    
+#     Args:
+#         text (str): Input text containing lift and metrics information.
+#         goals (list): List of valid goal metrics.
+    
+#     Returns:
+#         list: A list of dictionaries with "lift" and "metric" that match the goals.
+#     """
+#     pattern = r"""
+#         (\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*(\w[\w\s]*?)\b
+#         |improvement\s*of\s*(\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b
+#         |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+)%\b
+#         |(\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b
+#         |(?:increased|improved|boosted)\s*(?:.*?)\s*by\s*(\d+)%\b\s*(\w[\w\s]*?)\b
+#         |(\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b
+#     """
+    
+#     matches = re.findall(pattern, text.lower(), re.VERBOSE)
+#     results = []
+
+#     # Normalize the goals to lowercase for comparison
+#     normalized_goals = [goal.lower() for goal in goals]
+
+#     for match in matches:
+#         # Positive cases
+#         if match[0] and match[1]:  # x% lift/uplift/increase/improvement/higher/uptick/more in y
+#             lift, metric = match[0], match[1]
+#         elif match[2] and match[3]:  # improvement of x% in y
+#             lift, metric = match[2], match[3]
+#         elif match[4] and match[5]:  # increase in y of x%
+#             lift, metric = match[5], match[4]
+#         # Negative cases
+#         elif match[6] and match[7]:  # x% less/fewer/lower y
+#             lift, metric = f"-{match[6]}", match[7]
+#         elif match[8] and match[9]:  # increased/improved/boosted [...] by x%
+#             lift, metric = f"-{match[8]}", match[9]
+#         elif match[10] and match[11]:  # x% lift (or of) in y
+#             lift, metric = match[10], match[11]
+#         else:
+#             continue
+
+#         # Normalize metric for comparison
+#         metric = metric.strip().lower()
+#         print ("metric",metric)
+
+#         # Match metric with goals using substring or fuzzy matching
+#         matched_goal = next((goal for goal in normalized_goals if metric in goal), "")
+
+#         # Append the matched goal or leave metric empty if no match found
+#         results.append({"lift": f"{lift}%", "metric": matched_goal if matched_goal else ""})
+
+#     return results
+
+import re
+
 def extract_lift_and_metric(text, goals):
     """
     Extract lift (x%) and associated metric (y) from the text.
-    Handles patterns like:
-    - Positive lift: 
-      x% lift in (or of) y, x% uplift in (or of) y, x% increase in (or of) y,
-      x% improvement in (or of) y, improvement of x% in (or of) y,
-      increase in y of x%, x% higher y, x% uptick in (or of) y, x% more y
-    - Negative lift: 
-      x% less y, x% fewer y, increased [...] by x%, improved [...] by x%,
-      boosted [...] by x%, x% lower y
-    Returns a list of dictionaries with "lift" and "metric". Filters metrics against a predefined list of goals.
+    Match the extracted metric fully or partially with the predefined goals.
     
     Args:
         text (str): Input text containing lift and metrics information.
@@ -115,6 +174,23 @@ def extract_lift_and_metric(text, goals):
     # Normalize the goals to lowercase for comparison
     normalized_goals = [goal.lower() for goal in goals]
 
+    def match_with_goals(metric, goals):
+        """
+        Check if the metric matches or is part of any goal.
+        
+        Args:
+            metric (str): The extracted metric.
+            goals (list): List of normalized goals.
+        
+        Returns:
+            str: The best-matched goal, or an empty string if no match is found.
+        """
+        metric = metric.strip()
+        for goal in goals:
+            if metric in goal or goal in metric:  # Check for substring match
+                return goal
+        return ""
+
     for match in matches:
         # Positive cases
         if match[0] and match[1]:  # x% lift/uplift/increase/improvement/higher/uptick/more in y
@@ -135,15 +211,14 @@ def extract_lift_and_metric(text, goals):
 
         # Normalize metric for comparison
         metric = metric.strip().lower()
-        print ("metric",metric)
 
-        # Match metric with goals using substring or fuzzy matching
-        matched_goal = next((goal for goal in normalized_goals if metric in goal), "")
+        # Match metric with the goals
+        best_match = match_with_goals(metric, normalized_goals)
 
-        # Append the matched goal or leave metric empty if no match found
-        results.append({"lift": f"{lift}%", "metric": matched_goal if matched_goal else ""})
+        results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
     return results
+
 
 
 
