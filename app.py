@@ -106,7 +106,7 @@ def extract_lift_and_metric_ai(summary, goals):
         - boosted [...] by x%
       For these patterns, insert -x into the 'Lift' field.
 
-    3. Associate each lift value with the appropriate metric, but only include metrics that align with these organizational goals: {', '.join(goals)}.
+    3. Insert y in metric
 
 
     Text: "{summary}"
