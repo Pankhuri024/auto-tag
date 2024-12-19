@@ -43,7 +43,7 @@ def check_keywords(text, keyword_list, synonyms=None):
     
     # Stem the cleaned text into a list of stemmed words
     text_words = [stemmer.stem(word) for word in text_clean.split()]
-    excluded_stems = {stemmer.stem(word) for word in {"research", "researching", "researched", "searched"}}  # Stem excluded words
+    excluded_stems = {stemmer.stem(word) for word in {"research", "researching", "researched", "searched","engaged"}}  # Stem excluded words
     # excluded_words = {"research", "researching", "researched", "searched"}  # Add any other unwanted words here
     
     for keyword in keyword_list:
@@ -77,84 +77,65 @@ def check_keywords(text, keyword_list, synonyms=None):
     
     return selected_keywords
 
-# def extract_lift_and_metric(summary):
-#     """
-#     Extracts lift (x%) and associated metric (y) from the summary.
-#     Looks for patterns like 'x% increase in y', 'x% improvement of y', etc.
-#     """
-#     pattern = re.compile(
-#         r'(\d+\.?\d*)\s?%\s?(?:lift|uplift|increase|improvement)?\s?(?:in|of)?\s([a-zA-Z\s]+)',
-#         re.IGNORECASE
-#     )
-#     matches = pattern.findall(summary)
-
-#     lift_metric_pairs = []
-#     for match in matches:
-#         lift = float(match[0])  # Extract lift as a float
-#         metric = match[1].strip()  # Extract and clean metric
-#         lift_metric_pairs.append((lift, metric))
-    
-#     return lift_metric_pairs
-
-# def filter_metrics_by_goals(lift_metric_pairs, goals):
-#     """
-#     Filters the extracted metrics based on alignment with organizational goals.
-#     """
-#     filtered_pairs = []
-#     for lift, metric in lift_metric_pairs:
-#         # Check if the metric aligns with any goal
-#         if any(goal.lower() in metric.lower() for goal in goals):
-#             filtered_pairs.append((lift, metric))
-#     return filtered_pairs
-
-
 def extract_lift_and_metric_ai(summary, goals):
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     if not OPENAI_API_KEY:
         return jsonify({'message': 'OPENAI_API_KEY environment variable is not set.'}), 500
-    """
-    Uses OpenAI GPT API to extract lift and metric based on organizational goals and specific patterns.
-    """
+   
     prompt = f"""
-    Analyze the following summary text and extract:
+    Analyze the following summary text to extract percentage changes and metrics related to these goals: {', '.join(goals)}.:
 
-Any percentage change mentioned using these patterns:
+    1. Any percentage change mentioned using these patterns:
+        - x% lift in (or of) y
+        - x% uplift in (or of) y
+        - x% increase in (or of) y
+        - x% improvement in (or of) y
+        - improvement of x% in (or of) y
+        - increase in y of x%
+        - x% uptick in (or of) y
+        - x% higher y
+        - x% more y
+      For these patterns, insert x into the 'Lift' field.
 
-x% lift in (or of) y
-x% uplift in (or of) y
-x% increase in (or of) y
-x% improvement in (or of) y
-improvement of x% in (or of) y
-increase in y of x%
-x% uptick in (or of) y
-x% higher y
-x% more y
-For these patterns, insert +x into the 'Lift' field.
+    2. Any percentage change mentioned using these patterns:
+        - x% lower y
+        - x% less y
+        - x% fewer y
+        - increased [...] by x%
+        - improved [...] by x%
+        - boosted [...] by x%
+      For these patterns, insert -x into the 'Lift' field.
 
-Any percentage change mentioned using these patterns:
+    3. Associate each lift value with the appropriate metric, but only include metrics that align with these organizational goals: {', '.join(goals)}.
 
-x% lower y
-x% less y
-x% fewer y
-increased [...] by x%, 
-improved [...] by x%, 
-boosted [...] by x%
-For these patterns, insert -x into the 'Lift' field.
-    2. The associated metric it applies to.
-    Only include metrics that align with these organizational goals: {', '.join(goals)}.
 
     Text: "{summary}"
 
     Output format:
     - Lift: [Percentage]
     - Metric: [Metric Name]
+    "[
+       {{ "lift": "+x%", "metric": "y" }},
+        {{ "lift": "-x%", "metric": "y" }}
+        ...
+      ]
     """
     try:
         # Initialize OpenAI model
         llm = ChatOpenAI(model="gpt-3.5-turbo", api_key=OPENAI_API_KEY)
         response = llm(prompt)
         print("response", response)
-        return response.content
+        
+        # Extract structured data from the response
+        try:
+            results = json.loads(response.content)
+            valid_results = [
+                item for item in results if item["metric"] in goals
+            ]
+            return valid_results  # Only return valid lift-metric pairs
+        except json.JSONDecodeError as decode_error:
+            print(f"Error decoding response: {decode_error}")
+            return None  # Return None on parsing error
     except Exception as e:
         # Handle API errors or connection issues
         print(f"Error calling OpenAI API: {e}")
@@ -175,11 +156,7 @@ def process_insight():
         industries = data.get('industries', [])
         # Extract lift and metric
         lift_metric_pairs = extract_lift_and_metric_ai(summary, goals)
-        # filtered_pairs = filter_metrics_by_goals(lift_metric_pairs, goals)
-
-        # # Split filtered pairs into separate lists
-        # lift = [pair[0] for pair in filtered_pairs]
-        # metrics = [pair[1] for pair in filtered_pairs]
+   
 
         if not summary:
             return jsonify({"error": "Summary text is required"}), 400
