@@ -140,7 +140,6 @@ def extract_lift_and_metric_ai(summary, goals):
         print(f"Error calling OpenAI API: {e}")
         return None  # Fallback to None if an error occurs
 
-
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
     try:
