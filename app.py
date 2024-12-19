@@ -141,7 +141,6 @@ def extract_lift_and_metric_ai(summary, goals):
         return None  # Fallback to None if an error occurs
 
 
-
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
     try:
