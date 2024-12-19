@@ -186,6 +186,14 @@ def process_insight():
         selected_goals = check_keywords(summary, goals, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_research_types = check_keywords(summary, research_types, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_industries = check_keywords(summary, industries)
+        # Extract lift and metric using regex-based method
+        # lift_metric_pairs = extract_lift_and_metric(summary, goals)
+
+        # Separate lifts and metrics
+        lift_values = [item['lift'] for item in lift_metric_pairs]
+        print("lift_values",lift_values)
+        metric_values = [item['metric'] for item in lift_metric_pairs]
+        print("metric_values",metric_values)
         # Extract confidence levels
         selected_confidence_levels = extract_confidence_level(summary)
 
@@ -203,7 +211,8 @@ def process_insight():
             "selected_goals": selected_goals,
             "selected_research_types": selected_research_types,
             "selected_industries": selected_industries,
-            "selected_lift": lift_metric_pairs,
+            "selected_lift": lift_values,
+            "selected_metric": metric_values,
             "confidence_levels": selected_confidence_levels, 
             # "selected_metrics": metrics if metrics else "No metric found",
         })
