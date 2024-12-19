@@ -77,10 +77,6 @@ def check_keywords(text, keyword_list, synonyms=None):
     
     return selected_keywords
 
-import re
-
-# Function to extract lift and metric from text
-import re
 
 def extract_lift_and_metric(text, goals):
     """
@@ -108,6 +104,7 @@ def extract_lift_and_metric(text, goals):
         |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+)%\b
         |(\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b
         |(?:increased|improved|boosted)\s*(?:.*?)\s*by\s*(\d+)%\b\s*(\w[\w\s]*?)\b
+        |(\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b
     """
     
     matches = re.findall(pattern, text.lower(), re.VERBOSE)
@@ -126,18 +123,20 @@ def extract_lift_and_metric(text, goals):
             lift, metric = f"-{match[6]}", match[7]
         elif match[8] and match[9]:  # increased/improved/boosted [...] by x%
             lift, metric = f"-{match[8]}", match[9]
+        elif match[10] and match[11]:  # x% lift (or of) in y
+            lift, metric = match[10], match[11]
         else:
             continue
-        
+
         # Check if the metric is in the goals list, else set it to empty string
         metric = metric.strip().lower()  # Ensure case-insensitive comparison
-        print("metric",metric)
         if metric not in [goal.lower() for goal in goals]:  # Check goals case-insensitively
             metric = ""
 
         results.append({"lift": f"{lift}%", "metric": metric})
 
     return results
+
 
 
 
