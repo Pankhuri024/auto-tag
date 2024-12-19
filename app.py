@@ -78,6 +78,8 @@ def check_keywords(text, keyword_list, synonyms=None):
     return selected_keywords
 
 
+import re
+
 def extract_lift_and_metric(text, goals):
     """
     Extract lift (x%) and associated metric (y) from the text.
@@ -110,6 +112,9 @@ def extract_lift_and_metric(text, goals):
     matches = re.findall(pattern, text.lower(), re.VERBOSE)
     results = []
 
+    # Normalize the goals to lowercase for comparison
+    normalized_goals = [goal.lower() for goal in goals]
+
     for match in matches:
         # Positive cases
         if match[0] and match[1]:  # x% lift/uplift/increase/improvement/higher/uptick/more in y
@@ -128,17 +133,17 @@ def extract_lift_and_metric(text, goals):
         else:
             continue
 
-        # Check if the metric is in the goals list, else set it to empty string
-        metric = metric.strip().lower()  # Ensure case-insensitive comparison
-        print("metric",metric)
-        print("goal",goals)
-        if metric not in [goal.lower() for goal in goals]:  # Check goals case-insensitively
-            metric = ""
-            print("goal2",goals)
+        # Normalize metric for comparison
+        metric = metric.strip().lower()
 
-        results.append({"lift": f"{lift}%", "metric": metric})
+        # Match metric with goals using substring or fuzzy matching
+        matched_goal = next((goal for goal in normalized_goals if metric in goal), "")
+
+        # Append the matched goal or leave metric empty if no match found
+        results.append({"lift": f"{lift}%", "metric": matched_goal if matched_goal else ""})
 
     return results
+
 
 
 
