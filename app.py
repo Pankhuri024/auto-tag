@@ -80,7 +80,9 @@ def check_keywords(text, keyword_list, synonyms=None):
 import re
 
 # Function to extract lift and metric from text
-def extract_lift_and_metric(text,goals):
+import re
+
+def extract_lift_and_metric(text, goals):
     """
     Extract lift (x%) and associated metric (y) from the text.
     Handles patterns like:
@@ -91,8 +93,7 @@ def extract_lift_and_metric(text,goals):
     - Negative lift: 
       x% less y, x% fewer y, increased [...] by x%, improved [...] by x%,
       boosted [...] by x%, x% lower y
-    Returns a list of dictionaries with "lift" and "metric".
-    Filters metrics against a predefined list of goals.
+    Returns a list of dictionaries with "lift" and "metric". Filters metrics against a predefined list of goals.
     
     Args:
         text (str): Input text containing lift and metrics information.
@@ -108,6 +109,7 @@ def extract_lift_and_metric(text,goals):
         |(\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b
         |(?:increased|improved|boosted)\s*(?:.*?)\s*by\s*(\d+)%\b\s*(\w[\w\s]*?)\b
     """
+    
     matches = re.findall(pattern, text.lower(), re.VERBOSE)
     results = []
 
@@ -127,12 +129,15 @@ def extract_lift_and_metric(text,goals):
         else:
             continue
         
-        # Check if the metric is in the goals list
+        # Check if the metric is in the goals list, else set it to empty string
         metric = metric.strip()
-        if metric in goals:
-            results.append({"lift": f"{lift}%", "metric": metric})
-    
+        if metric not in goals:
+            metric = ""
+
+        results.append({"lift": f"{lift}%", "metric": metric})
+
     return results
+
 
 
 def extract_confidence_level(text):
