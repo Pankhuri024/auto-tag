@@ -130,12 +130,11 @@ def extract_lift_and_metric_ai(summary, goals):
         try:
             results = json.loads(response.content)
             valid_results = [
-                item for item in results if item["metric"] in goals
+                item for item in results if "lift" in item and "metric" in item and item["metric"] in goals
             ]
-            return valid_results  # Only return valid lift-metric pairs
-        except json.JSONDecodeError as decode_error:
-            print(f"Error decoding response: {decode_error}")
-            return None  # Return None on parsing error
+        except json.JSONDecodeError:
+            valid_results = []
+
     except Exception as e:
         # Handle API errors or connection issues
         print(f"Error calling OpenAI API: {e}")
