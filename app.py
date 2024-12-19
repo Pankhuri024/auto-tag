@@ -130,8 +130,11 @@ def extract_lift_and_metric(text, goals):
 
         # Check if the metric is in the goals list, else set it to empty string
         metric = metric.strip().lower()  # Ensure case-insensitive comparison
+        print("metric",metric)
+        print("goal",goals)
         if metric not in [goal.lower() for goal in goals]:  # Check goals case-insensitively
             metric = ""
+            print("goal2",goals)
 
         results.append({"lift": f"{lift}%", "metric": metric})
 
