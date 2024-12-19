@@ -83,30 +83,39 @@ import re
 def extract_lift_and_metric(text):
     """
     Extract lift (x%) and associated metric (y) from the text.
-    Looks for patterns like:
-    - x% lift in (or of) y
-    - x% uplift in (or of) y
-    - x% increase in (or of) y
-    - x% improvement in (or of) y
-    - improvement of x% in (or of) y
-    - increase in y of x%
+    Handles patterns like:
+    - Positive lift: 
+      x% lift in (or of) y, x% uplift in (or of) y, x% increase in (or of) y,
+      x% improvement in (or of) y, improvement of x% in (or of) y,
+      increase in y of x%, x% higher y, x% uptick in (or of) y, x% more y
+    - Negative lift: 
+      x% less y, x% fewer y, increased [...] by x%, improved [...] by x%,
+      boosted [...] by x%, x% lower y
     Returns a list of dictionaries with "lift" and "metric".
     """
     pattern = r"""
-        (\d+)%\s*(?:lift|uplift|increase|improvement)\s*(?:in|of)\s*(\w[\w\s]*?)\b
+        (\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*(\w[\w\s]*?)\b
         |improvement\s*of\s*(\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b
         |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+)%\b
+        |(\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b
+        |(?:increased|improved|boosted)\s*(?:.*?)\s*by\s*(\d+)%\b\s*(\w[\w\s]*?)\b
     """
     matches = re.findall(pattern, text.lower(), re.VERBOSE)
     results = []
-    
+
     for match in matches:
-        if match[0] and match[1]:  # Matches x% lift in y
+        # Positive cases
+        if match[0] and match[1]:  # x% lift/uplift/increase/improvement/higher/uptick/more in y
             lift, metric = match[0], match[1]
-        elif match[2] and match[3]:  # Matches improvement of x% in y
+        elif match[2] and match[3]:  # improvement of x% in y
             lift, metric = match[2], match[3]
-        elif match[4] and match[5]:  # Matches increase in y of x%
+        elif match[4] and match[5]:  # increase in y of x%
             lift, metric = match[5], match[4]
+        # Negative cases
+        elif match[6] and match[7]:  # x% less/fewer/lower y
+            lift, metric = f"-{match[6]}", match[7]
+        elif match[8] and match[9]:  # increased/improved/boosted [...] by x%
+            lift, metric = f"-{match[8]}", match[9]
         else:
             continue
         results.append({"lift": f"{lift}%", "metric": metric.strip()})
