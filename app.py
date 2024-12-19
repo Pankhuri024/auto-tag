@@ -80,7 +80,7 @@ def check_keywords(text, keyword_list, synonyms=None):
 import re
 
 # Function to extract lift and metric from text
-def extract_lift_and_metric(text):
+def extract_lift_and_metric(text,goals):
     """
     Extract lift (x%) and associated metric (y) from the text.
     Handles patterns like:
@@ -178,7 +178,7 @@ def process_insight():
         selected_goals = check_keywords(summary, goals, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_research_types = check_keywords(summary, research_types, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_industries = check_keywords(summary, industries)
-        lift_metric_pairs = extract_lift_and_metric(summary)
+        lift_metric_pairs = extract_lift_and_metric(summary, goals)
 
         # Separate lifts and metrics
         lift_values = [item['lift'] for item in lift_metric_pairs]
@@ -205,7 +205,6 @@ def process_insight():
             "selected_lift": lift_values,
             "selected_metric": metric_values,
             "selected_confidence_levels": selected_confidence_levels, 
-            # "selected_metrics": metrics if metrics else "No metric found",
         })
 
     except Exception as e:
