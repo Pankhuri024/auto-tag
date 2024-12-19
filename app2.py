@@ -77,78 +77,30 @@ def check_keywords(text, keyword_list, synonyms=None):
     
     return selected_keywords
 
-# def extract_lift_and_metric(summary):
-#     """
-#     Extracts lift (x%) and associated metric (y) from the summary.
-#     Looks for patterns like 'x% increase in y', 'x% improvement of y', etc.
-#     """
-#     pattern = re.compile(
-#         r'(\d+\.?\d*)\s?%\s?(?:lift|uplift|increase|improvement)?\s?(?:in|of)?\s([a-zA-Z\s]+)',
-#         re.IGNORECASE
-#     )
-#     matches = pattern.findall(summary)
-
-#     lift_metric_pairs = []
-#     for match in matches:
-#         lift = float(match[0])  # Extract lift as a float
-#         metric = match[1].strip()  # Extract and clean metric
-#         lift_metric_pairs.append((lift, metric))
-    
-#     return lift_metric_pairs
-
-# def filter_metrics_by_goals(lift_metric_pairs, goals):
-#     """
-#     Filters the extracted metrics based on alignment with organizational goals.
-#     """
-#     filtered_pairs = []
-#     for lift, metric in lift_metric_pairs:
-#         # Check if the metric aligns with any goal
-#         if any(goal.lower() in metric.lower() for goal in goals):
-#             filtered_pairs.append((lift, metric))
-#     return filtered_pairs
-
-
-def extract_lift_and_metric_ai(summary, goals):
+def get_primary_metric(summary):
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     if not OPENAI_API_KEY:
         return jsonify({'message': 'OPENAI_API_KEY environment variable is not set.'}), 500
+
     """
-    Uses OpenAI GPT API to extract lift and metric based on organizational goals and specific patterns.
+    Uses OpenAI GPT to extract the primary metric for an A/B test from a summary.
+    Args:
+        summary (str): The summary of the A/B test insight.
+    Returns:
+        str: The primary metric (e.g., 'engagement rate', 'conversion rate').
     """
+    # Define the prompt for OpenAI
     prompt = f"""
-    Analyze the following summary text and extract:
+    You are an expert in A/B testing and data analysis. Your job is to read a summary of an A/B test and identify the most relevant **primary metric** for evaluating the test's success.
 
-Any percentage change mentioned using these patterns:
+    A **primary metric** is the key performance indicator (KPI) that directly reflects the test's objective. Examples include engagement rate, conversion rate, revenue, etc.
 
-x% lift in (or of) y
-x% uplift in (or of) y
-x% increase in (or of) y
-x% improvement in (or of) y
-improvement of x% in (or of) y
-increase in y of x%
-x% uptick in (or of) y
-x% higher y
-x% more y
-For these patterns, insert +x into the 'Lift' field.
+    Here is the summary:
+    "{summary}"
 
-Any percentage change mentioned using these patterns:
-
-x% lower y
-x% less y
-x% fewer y
-increased [...] by x%, 
-improved [...] by x%, 
-boosted [...] by x%
-For these patterns, insert -x into the 'Lift' field.
-    2. The associated metric it applies to.
-    Only include metrics that align with these organizational goals: {', '.join(goals)}.
-
-    Text: "{summary}"
-
-    Output format:
-    - Lift: [Percentage]
-    - Metric: [Metric Name]
+    Based on the content of the summary, provide **only the primary metric** for this test. Do not include explanations or additional details. Provide your answer as a single phrase, like "engagement rate" or "conversion rate".
     """
+
     try:
         # Initialize OpenAI model
         llm = ChatOpenAI(model="gpt-3.5-turbo", api_key=OPENAI_API_KEY)
@@ -160,6 +112,23 @@ For these patterns, insert -x into the 'Lift' field.
         print(f"Error calling OpenAI API: {e}")
         return None  # Fallback to None if an error occurs
 
+def extract_lift(summary):
+    """
+    Extracts percentage values from the summary.
+    Looks for patterns like 'x% increase', 'x% improvement', 'x% higher', etc.
+    """
+    # Updated regex to capture any percentage value followed by optional words like 'increase', 'improvement', etc.
+    pattern = re.compile(
+        r'(\d+\.?\d*)\s?%', re.IGNORECASE
+    )
+    matches = pattern.findall(summary)
+
+    lift_values = []
+    for match in matches:
+        lift = float(match)  # Convert the match to float
+        lift_values.append(lift)
+
+    return lift_values
 
 
 @app.route('/process_insight', methods=['POST'])
@@ -173,13 +142,9 @@ def process_insight():
         elements = data.get('elements', [])
         research_types = data.get('research_types', [])
         industries = data.get('industries', [])
-        # Extract lift and metric
-        lift_metric_pairs = extract_lift_and_metric_ai(summary, goals)
-        # filtered_pairs = filter_metrics_by_goals(lift_metric_pairs, goals)
-
-        # # Split filtered pairs into separate lists
-        # lift = [pair[0] for pair in filtered_pairs]
-        # metrics = [pair[1] for pair in filtered_pairs]
+         # Extract lift and metric
+        lift = extract_lift(summary)
+        metrics = get_primary_metric(summary)
 
         if not summary:
             return jsonify({"error": "Summary text is required"}), 400
@@ -192,11 +157,11 @@ def process_insight():
         selected_industries = check_keywords(summary, industries)
 
         # Priority logic for A/B (Split Test)
-        if lift_metric_pairs:  # If lift values are detected
+        if lift:  # If lift values (percentages) are detected
             ab_split_test_synonyms = RESEARCH_TYPE_SYNONYMS.get("A/B (Split Test)", [])
             if any(keyword in summary.lower() for keyword in ab_split_test_synonyms):
                 if "A/B (Split Test)" not in selected_research_types:
-                    selected_research_types.insert(0, "A/B (Split Test)")  # Ensure priority
+                    selected_research_types.insert(0, "A/B (Split Test)")  # Ensure it is at the top of the list
 
         return jsonify({
             "selected_categories": selected_categories,
@@ -205,8 +170,8 @@ def process_insight():
             "selected_goals": selected_goals,
             "selected_research_types": selected_research_types,
             "selected_industries": selected_industries,
-            "selected_lift": lift_metric_pairs,
-            # "selected_metrics": metrics if metrics else "No metric found",
+            "selected_lift": lift,
+            "selected_metrics": metrics if metrics else "No metric found",
         })
 
     except Exception as e:

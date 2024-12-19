@@ -7,7 +7,20 @@
       "testing",
       "tested",
       "A/B",
-      "AB test"
+      "AB test",
+      "increase",
+      "decrease",
+      "improvement",
+      "higher",
+      "lower",
+      "percentage",
+      "10%",
+      "20%",
+      "30%",
+      "X%",
+      "confidence level",
+      "conf. level",
+      "conf level"
     ],
     "User Study": ["user research", "usability study", "usability research"],
     "Market Research": [
@@ -35,8 +48,9 @@
       "purchasing trend"
     ],
     "Average Order Value/AOV": ["average order value", "AOV"],
-    "Email - Mailchimp": ["MC emails", "Mailchimp", "MC email", "MC"],
-    "Email - HubSpot": ["HS email", "HS emails"],
-    "Email CTR": ["CTR", "CTOR"]
+    "Email - Mailchimp": ["MC emails", "Mailchimp", "MC email", "MC", "in MC"],
+    "Email - HubSpot": ["HS email", "HS emails", "in HS"],
+    "Email CTR": ["CTR", "CTOR"],
+    "Layout": ["horizontal swap"]
   }
 }
