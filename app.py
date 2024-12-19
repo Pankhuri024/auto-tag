@@ -129,7 +129,7 @@ def extract_lift_and_metric_ai(summary, goals):
             valid_results = [
                 item for item in results if "lift" in item and "metric" in item and item["metric"] in goals
             ]
-            print("valid_results",valid_results)
+            print("results",results)
             return jsonify(results) 
         except json.JSONDecodeError:
             valid_results = []
@@ -138,6 +138,29 @@ def extract_lift_and_metric_ai(summary, goals):
         # Handle API errors or connection issues
         print(f"Error calling OpenAI API: {e}")
         return None  # Fallback to None if an error occurs
+    
+# Function to extract a single confidence level
+def extract_confidence_level(text):
+    """
+    Extract a single confidence level from the text.
+    Looks for patterns like:
+    - x% stat sig
+    - x% stat sig.
+    - x% stat significance
+    - x% statistical sig.
+    - x% statistical significance
+    - x% statistical sig
+    Returns the first match or the maximum value if multiple matches exist.
+    """
+    pattern = r"(\d+)%\s*(?:stat(?:istical)?(?:\s+sig(?:nificance)?)?)"
+    matches = re.findall(pattern, text.lower())  # Case-insensitive search
+    
+    if matches:
+        # Convert the matches to integers
+        confidence_levels = [int(match) for match in matches]
+        # Return the first match or max(confidence_levels) if you want the maximum
+        return confidence_levels[0]  # Use max(confidence_levels) if required
+    return None  # Return None if no match is found
 
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
@@ -163,6 +186,8 @@ def process_insight():
         selected_goals = check_keywords(summary, goals, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_research_types = check_keywords(summary, research_types, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_industries = check_keywords(summary, industries)
+        # Extract confidence levels
+        selected_confidence_levels = extract_confidence_level(summary)
 
         # Priority logic for A/B (Split Test)
         if lift_metric_pairs:  # If lift values are detected
@@ -179,6 +204,7 @@ def process_insight():
             "selected_research_types": selected_research_types,
             "selected_industries": selected_industries,
             "selected_lift": lift_metric_pairs,
+            "confidence_levels": selected_confidence_levels, 
             # "selected_metrics": metrics if metrics else "No metric found",
         })
 
