@@ -77,38 +77,40 @@ def check_keywords(text, keyword_list, synonyms=None):
     
     return selected_keywords
 
-def extract_lift_and_metric(summary, goals):
-    """
-    Extracts lift (percentage changes) and associated metrics from the summary text.
-    Includes patterns like `x% increase in y`.
-    """
-    patterns = [
-        (r'(\d+)%\s+(?:lift|uplift|increase|improvement|uptick|higher|more)\s+(?:in|of)\s+([\w\s]+)', '+'),
-        (r'improvement\s+of\s+(\d+)%\s+(?:in|of)\s+([\w\s]+)', '+'),
-        (r'increase\s+in\s+([\w\s]+)\s+of\s+(\d+)%', '+'),
-        (r'(\d+)%\s+(?:increase|boost|gain)\s+in\s+([\w\s]+)', '+'),
-        (r'(\d+)%\s+of\s+([\w\s]+)', '+'),
-        (r'(\d+)%\s+(?:lower|less|fewer)\s+([\w\s]+)', '-'),
-        (r'decrease\s+in\s+([\w\s]+)\s+of\s+(\d+)%', '-'),
-        (r'reduction\s+of\s+(\d+)%\s+(?:in|of)\s+([\w\s]+)', '-'),
-        (r'(\d+)%\s+decrease\s+in\s+([\w\s]+)', '-')
-    ]
+import re
 
+# Function to extract lift and metric from text
+def extract_lift_and_metric(text):
+    """
+    Extract lift (x%) and associated metric (y) from the text.
+    Looks for patterns like:
+    - x% lift in (or of) y
+    - x% uplift in (or of) y
+    - x% increase in (or of) y
+    - x% improvement in (or of) y
+    - improvement of x% in (or of) y
+    - increase in y of x%
+    Returns a list of dictionaries with "lift" and "metric".
+    """
+    pattern = r"""
+        (\d+)%\s*(?:lift|uplift|increase|improvement)\s*(?:in|of)\s*(\w[\w\s]*?)\b
+        |improvement\s*of\s*(\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b
+        |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+)%\b
+    """
+    matches = re.findall(pattern, text.lower(), re.VERBOSE)
     results = []
-    for pattern, sign in patterns:
-        matches = re.findall(pattern, summary.lower())
-        for match in matches:
-            if len(match) == 2:
-                lift, metric = match[0], match[1].strip()  # Ensure lift comes first
-            else:
-                metric, lift = match[0], match[1].strip()  # Handle alternate formats
-            
-            metric_cleaned = " ".join(metric.split())  # Clean up extra spaces
-            
-            # Filter by goals if provided
-            if not goals or any(goal.lower() in metric_cleaned for goal in goals):
-                results.append({"lift": int(lift), "metric": metric_cleaned})
-
+    
+    for match in matches:
+        if match[0] and match[1]:  # Matches x% lift in y
+            lift, metric = match[0], match[1]
+        elif match[2] and match[3]:  # Matches improvement of x% in y
+            lift, metric = match[2], match[3]
+        elif match[4] and match[5]:  # Matches increase in y of x%
+            lift, metric = match[5], match[4]
+        else:
+            continue
+        results.append({"lift": f"{lift}%", "metric": metric.strip()})
+    
     return results
 
 
