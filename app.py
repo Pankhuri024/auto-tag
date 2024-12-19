@@ -179,7 +179,7 @@ def process_insight():
 
         selected_categories = check_keywords(summary, categories, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_elements = check_keywords(summary, elements, synonyms=RESEARCH_TYPE_SYNONYMS)
-        selected_tools = check_keywords(summary, tools)
+        selected_tools = check_keywords(summary, tools, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_goals = check_keywords(summary, goals, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_research_types = check_keywords(summary, research_types, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_industries = check_keywords(summary, industries)
