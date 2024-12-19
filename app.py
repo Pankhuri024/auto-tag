@@ -135,6 +135,7 @@ def extract_lift_and_metric(text, goals):
 
         # Normalize metric for comparison
         metric = metric.strip().lower()
+        print ("metric",metric)
 
         # Match metric with goals using substring or fuzzy matching
         matched_goal = next((goal for goal in normalized_goals if metric in goal), "")
