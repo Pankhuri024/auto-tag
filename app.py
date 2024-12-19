@@ -140,6 +140,8 @@ def extract_lift_and_metric(text, goals):
 
 
 
+import re
+
 def extract_confidence_level(text):
     """
     Extract a single confidence level from the text.
@@ -150,9 +152,11 @@ def extract_confidence_level(text):
     - x% statistical sig.
     - x% statistical significance
     - x% statistical sig
+    - x% confidence
     Returns the first match or the maximum value if multiple matches exist.
     """
-    pattern = r"(\d+)%\s*(?:stat(?:istical)?(?:\s+sig(?:nificance)?)?)"
+    # Updated regex to include "confidence"
+    pattern = r"(\d+)%\s*(?:stat(?:istical)?(?:\s+sig(?:nificance)?)?|confidence)"
     matches = re.findall(pattern, text.lower())  # Case-insensitive search
     
     if matches:
@@ -161,6 +165,7 @@ def extract_confidence_level(text):
         # Return the first match or max(confidence_levels) if you want the maximum
         return confidence_levels[0]  # Use max(confidence_levels) if required
     return None  # Return None if no match is found
+
 
 @app.route('/process_insight', methods=['POST'])
 def process_insight():
