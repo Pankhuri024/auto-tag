@@ -130,7 +130,7 @@ def extract_lift_and_metric_ai(summary, goals):
                 item for item in results if "lift" in item and "metric" in item and item["metric"] in goals
             ]
             print("results",results)
-            return jsonify(results) 
+            return results
         except json.JSONDecodeError:
             valid_results = []
 
