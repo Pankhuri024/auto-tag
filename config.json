@@ -56,7 +56,7 @@
     "Average Order Value/AOV": ["average order value", "AOV"],
     "Email - Mailchimp": ["MC emails", "Mailchimp", "MC email", "MC", "in MC"],
     "Mailchimp": ["Mailchimp", "in MC"],
-    "Email - HubSpot": ["HS email", "HS emails", "in HS"],
+    "Email - Hubspot": ["HS email", "HS emails", "in HS"],
     "HubSpot": ["HubSpot", "in HS"],
     "Email CTR": ["CTR", "CTOR"],
     "Layout": ["horizontal swap"]
