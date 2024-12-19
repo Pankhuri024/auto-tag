@@ -92,6 +92,14 @@ def extract_lift_and_metric(text):
       x% less y, x% fewer y, increased [...] by x%, improved [...] by x%,
       boosted [...] by x%, x% lower y
     Returns a list of dictionaries with "lift" and "metric".
+    Filters metrics against a predefined list of goals.
+    
+    Args:
+        text (str): Input text containing lift and metrics information.
+        goals (list): List of valid goal metrics.
+    
+    Returns:
+        list: A list of dictionaries with "lift" and "metric" that match the goals.
     """
     pattern = r"""
         (\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*(\w[\w\s]*?)\b
@@ -118,7 +126,11 @@ def extract_lift_and_metric(text):
             lift, metric = f"-{match[8]}", match[9]
         else:
             continue
-        results.append({"lift": f"{lift}%", "metric": metric.strip()})
+        
+        # Check if the metric is in the goals list
+        metric = metric.strip()
+        if metric in goals:
+            results.append({"lift": f"{lift}%", "metric": metric})
     
     return results
 
