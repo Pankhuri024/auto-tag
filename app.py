@@ -80,7 +80,7 @@ def check_keywords(text, keyword_list, synonyms=None):
 def extract_lift_and_metric(summary, goals):
     """
     Extracts lift (percentage changes) and associated metrics from the summary text.
-    Includes patterns like `x% of y`.
+    Includes patterns like `x% increase in y`.
     """
     patterns = [
         (r'(\d+)%\s+(?:lift|uplift|increase|improvement|uptick|higher|more)\s+(?:in|of)\s+([\w\s]+)', '+'),
@@ -97,20 +97,18 @@ def extract_lift_and_metric(summary, goals):
     results = []
     for pattern, sign in patterns:
         matches = re.findall(pattern, summary.lower())
-        print(f"Pattern: {pattern}, Matches: {matches}")  # Debug print
         for match in matches:
             if len(match) == 2:
-                metric, lift = match[1].strip(), match[0]
+                lift, metric = match[0], match[1].strip()  # Ensure lift comes first
             else:
-                lift, metric = match[0], match[1].strip()
-
-            metric_cleaned = " ".join(metric.split())  # Clean up metric
-            print(f"Metric: {metric_cleaned}, Lift: {lift}")  # Debug print
+                metric, lift = match[0], match[1].strip()  # Handle alternate formats
             
-            if any(goal.lower() in metric_cleaned or metric_cleaned in goal.lower() for goal in goals):
-                results.append({"lift": f"{sign}{lift}%", "metric": metric_cleaned})
-    
-    print("Final Results:", results)  # Debug final results
+            metric_cleaned = " ".join(metric.split())  # Clean up extra spaces
+            
+            # Filter by goals if provided
+            if not goals or any(goal.lower() in metric_cleaned for goal in goals):
+                results.append({"lift": int(lift), "metric": metric_cleaned})
+
     return results
 
 
