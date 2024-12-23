@@ -162,7 +162,7 @@ def extract_lift_and_metric(text, goals):
     pattern = r"""
         (\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*(\w[\w\s]*?)\b
         |improvement\s*of\s*(\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b
-        |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+)%\b
+        |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+)%\b      # This line adjusted for 'increase in y of x%'
         |(\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b
         |(?:increased|improved|boosted)\s*(?:.*?)\s*by\s*(\d+(\.\d+)?)%\s*(\w[\w\s]*?)\b
         |(\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b
@@ -197,7 +197,7 @@ def extract_lift_and_metric(text, goals):
             lift, metric = match[0], match[1]
         elif match[2] and match[3]:  # improvement of x% in y
             lift, metric = match[2], match[3]
-        elif match[4] and match[5]:  # increase in y of x%
+        elif match[4] and match[5]:  # increase in y of x% (adjusted for this case)
             lift, metric = match[5], match[4]
         # Negative cases
         elif match[6] and match[7]:  # x% less/fewer/lower y
@@ -218,6 +218,7 @@ def extract_lift_and_metric(text, goals):
         results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
     return results
+
 
 
 
