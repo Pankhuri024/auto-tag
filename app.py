@@ -164,7 +164,7 @@ def extract_lift_and_metric(text, goals):
         |improvement\s*of\s*(\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b
         |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+)%\b
         |(\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b
-        |(?:increased|improved|boosted)\s*(?:.*?)\s*by\s*(\d+)%\b\s*(\w[\w\s]*?)\b
+        |(?:increased|improved|boosted)\s*(?:.*?)(?:by\s*(\d+)%\b)\s*(\w[\w\s]*?)\b
         |(\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b
     """
     
