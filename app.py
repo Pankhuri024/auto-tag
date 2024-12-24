@@ -160,13 +160,14 @@ def extract_lift_and_metric(text, goals):
         list: A list of dictionaries with "lift" and "metric" that match the goals.
     """
     pattern = r"""
-        (\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*(\w[\w\s]*?)\b
-        |improvement\s*of\s*(\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b
-        |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+)%\b
-        |(\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b
-        |(?:increased|improved|boosted)\s*(\w[\w\s]*?)\s*by\s*(\d+(\.\d+)?)%\b
-        |(\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b
+        (\d+\.\d+|\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*(\w[\w\s]*?)\b
+        |improvement\s*of\s*(\d+\.\d+|\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b
+        |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+\.\d+|\d+)%\b
+        |(\d+\.\d+|\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b
+        |(?:increased|improved|boosted)\s*(\w[\w\s]*?)\s*by\s*(\d+\.\d+|\d+)%\b
+        |(\d+\.\d+|\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b
     """
+
 
     
     matches = re.findall(pattern, text.lower(), re.VERBOSE)
