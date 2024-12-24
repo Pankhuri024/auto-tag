@@ -162,13 +162,14 @@ def extract_lift_and_metric(text, goals):
     pattern = r"""
         (\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*(\w[\w\s]*?)\b
         |improvement\s*of\s*(\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b
-        |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+)%\b      # This line adjusted for 'increase in y of x%'
+        |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+)%\b
         |(\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b
         |(?:increased|improved|boosted)\s*(?:.*?)\s*by\s*(\d+(\.\d+)?)%\s*(\w[\w\s]*?)\b
         |(\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b
     """
     
     matches = re.findall(pattern, text.lower(), re.VERBOSE)
+    print("Matches found:", matches)
     results = []
 
     # Normalize the goals to lowercase for comparison
@@ -192,12 +193,13 @@ def extract_lift_and_metric(text, goals):
         return ""
 
     for match in matches:
+        print("Processing match:", match)
         # Positive cases
         if match[0] and match[1]:  # x% lift/uplift/increase/improvement/higher/uptick/more in y
             lift, metric = match[0], match[1]
         elif match[2] and match[3]:  # improvement of x% in y
             lift, metric = match[2], match[3]
-        elif match[4] and match[5]:  # increase in y of x% (adjusted for this case)
+        elif match[4] and match[5]:  # increase in y of x%
             lift, metric = match[5], match[4]
         # Negative cases
         elif match[6] and match[7]:  # x% less/fewer/lower y
@@ -207,7 +209,10 @@ def extract_lift_and_metric(text, goals):
         elif match[10] and match[11]:  # x% lift (or of) in y
             lift, metric = match[10], match[11]
         else:
+            print("No valid case matched for:", match)
             continue
+        
+        print(f"Extracted lift: {lift}, metric: {metric}")
 
         # Normalize metric for comparison
         metric = metric.strip().lower()
@@ -215,10 +220,13 @@ def extract_lift_and_metric(text, goals):
         # Match metric with the goals
         best_match = match_with_goals(metric, normalized_goals)
 
+        print(f"Best match for metric '{metric}': '{best_match}'")
+
         results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
-    return results
 
+    print("Final results:", results) 
+    return results
 
 
 
