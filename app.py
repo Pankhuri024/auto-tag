@@ -164,9 +164,10 @@ def extract_lift_and_metric(text, goals):
         |improvement\s*of\s*(\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b
         |increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+)%\b
         |(\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b
-        |(?:increased|improved|boosted)\s*(?:.*?)\s*by\s*(\d+(\.\d+)?)%\s*(\w[\w\s]*?)\b
+        |(?:increased|improved|boosted)\s*(\w[\w\s]*?)\s*by\s*(\d+(\.\d+)?)%\b
         |(\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b
     """
+
     
     matches = re.findall(pattern, text.lower(), re.VERBOSE)
     print("Matches found:", matches)
