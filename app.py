@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify, Response
 import re
 import json  # For loading the JSON config
@@ -129,42 +130,66 @@ def extract_lift_and_metric(text, goals):
     results = []
     normalized_goals = [goal.lower() for goal in goals]
 
-    def match_with_goals(metric, goals):
-        metric_words = metric.strip().split()
-        
-        for goal in goals:
-            for word in metric_words:
-                if word in goal or goal in word:
-                    return goal
-        return ""
+    # def match_with_goals(metric, goals):
+    #     metric_words = metric.split()  # Limit to max 3 words
+    #     for goal in goals:
+    #         for word in metric_words:
+    #             if word.lower() in goal.lower():
+    #                 return metric  # Return the original metric if it aligns with any goal
+    #     return ""
 
     # def match_with_goals(metric, goals):
-    #     # Synonyms mapping (expand as needed)
-    #     synonyms = {
-    #         "leads": "lead generation",
-    #     }
+    #     """
+    #     Match metric with goals, considering partial matches based on a minimum of 4 consecutive characters.
+    #     Exclude unnecessary words like 'the', 'is', 'am', 'are' from the metric before returning.
+    #     """
+    #     # Define a set of stop words to exclude
+    #     stop_words = {"the", "is", "am", "are", "a", "an", "of", "to", "in", "on", "at", "for", "by", "with", "and", "or"}
+        
+    #     # Split the metric into individual words and filter out stop words
+    #     metric_words = [word for word in metric.split() if word.lower() not in stop_words]
+    #     print('metric_words',metric_words)
+    #     cleaned_metric = " ".join(metric_words)  # Join the cleaned words back into a string
+    #     print('cleaned_metric',cleaned_metric)
 
-    #     # Normalize the metric
-    #     metric = metric.strip().lower()
-
-    #     # Check for exact matches in synonyms
-    #     if metric in synonyms:
-    #         metric = synonyms[metric]
-
-    #     # Full or partial match with goals
     #     for goal in goals:
-    #         if metric in goal or goal in metric:
-    #             return goal
-
-    #     # Split metric into words for partial matching
-    #     metric_words = metric.split()
-    #     for word in metric_words:
-    #         for goal in goals:
-    #             if word in goal or goal in word:
-    #                 return goal
+    #         print('goal',goal)
+    #         for word in metric_words:
+    #             print('word',word)
+    #             word = word.lower()
+    #             goal = goal.lower()
+                
+    #             if word.lower() in goal.lower():
+    #                 return cleaned_metric  # Return the cleaned metric if it aligns with any goal
 
     #     return ""
 
+    def match_with_goals(metric, goals):
+        """
+        Match metric with goals, considering partial matches based on stemming.
+        Exclude unnecessary words like 'the', 'is', 'am', 'are' from the metric before returning.
+        """
+        # Initialize stemmer
+        stemmer = PorterStemmer()
+
+        # Define a set of stop words to exclude
+        stop_words = {"the", "is", "am", "are", "a", "an", "of", "to", "in", "on", "at", "for", "by", "with", "and", "or"}
+        
+        # Split the metric into individual words and filter out stop words
+        metric_words = [word for word in metric.split() if word.lower() not in stop_words]
+        cleaned_metric = " ".join(metric_words)  # Join the cleaned words back into a string
+
+        # Stem the metric words
+        stemmed_metric_words = [stemmer.stem(word.lower()) for word in metric_words]
+
+        # Iterate through the goals to find matches
+        for goal in goals:
+            stemmed_goal = stemmer.stem(goal.lower())
+            for stemmed_word in stemmed_metric_words:
+                if stemmed_word in stemmed_goal:
+                    return cleaned_metric  # Return the cleaned metric if it aligns with any goal
+
+        return ""
 
 
     # Process positive patterns
@@ -181,7 +206,7 @@ def extract_lift_and_metric(text, goals):
                 continue
             
             metric = metric.strip().lower()
-            best_match = match_with_goals(metric, normalized_goals)
+            best_match = match_with_goals(metric, goals)
             print(f"Best match for metric '{metric}': '{best_match}'")
 
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
@@ -197,7 +222,7 @@ def extract_lift_and_metric(text, goals):
                 continue
             
             metric = metric.strip().lower()
-            best_match = match_with_goals(metric, normalized_goals)
+            best_match = match_with_goals(metric, goals)
             print(f"Best match for metric '{metric}': '{best_match}'")
 
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
@@ -217,7 +242,7 @@ def extract_lift_and_metric(text, goals):
                 continue
             
             metric = metric.strip().lower()
-            best_match = match_with_goals(metric, normalized_goals)
+            best_match = match_with_goals(metric, goals)
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
         # Process negative patterns
@@ -228,9 +253,10 @@ def extract_lift_and_metric(text, goals):
         for match in matches:
             print('match',match)
             if match[0] and match[2]:
-                lift, metric = f"-{match[2]}", match[0]
+                lift, metric = f"-{match[2]}", match[1] 
             metric = metric.strip().lower()
-            best_match = match_with_goals(metric, normalized_goals)
+            print('metric',metric)
+            best_match = match_with_goals(metric, goals)
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
     for pattern in boosted_negative_pattern_alt:
@@ -247,7 +273,7 @@ def extract_lift_and_metric(text, goals):
                 lift = match.group(3) 
                 metric = match.group(2).strip()
                 metric = metric.strip().lower()
-                best_match = match_with_goals(metric, normalized_goals)
+                best_match = match_with_goals(metric, goals)
 
                 results.append({"lift": f"-{lift}%", "metric": best_match})
 
