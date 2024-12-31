@@ -114,11 +114,16 @@ def extract_lift_and_metric(text, goals):
     ]
 
     negative_patterns2=[
+        # r"(\w+)\s+was\s+(boosted|improved|increased)\s+by\s+(\d+(\.\d+)?)%",
+        # r"(\w+(\s+\w+){0,1})\s+increased\s+by\s+(\d+(\.\d+)?)%",
+    ]
+
+    positive_patterns3=[
         r"(\w+)\s+was\s+(boosted|improved|increased)\s+by\s+(\d+(\.\d+)?)%",
         r"(\w+(\s+\w+){0,1})\s+increased\s+by\s+(\d+(\.\d+)?)%",
     ]
 
-    boosted_negative_pattern_alt = [
+    boosted_positive_pattern_alt = [
         r"(boosted|improved|increased|boosts|increases|improves)\s+(.*?)\s+by\s+(\d+(\.\d+)?)%",
     ]
   
@@ -259,7 +264,22 @@ def extract_lift_and_metric(text, goals):
             best_match = match_with_goals(metric, goals)
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
-    for pattern in boosted_negative_pattern_alt:
+
+        # Process negative patterns
+    for pattern in positive_patterns3:
+        matches = re.findall(pattern, text)
+        print(f"Matches for negative pattern2 '{pattern}':", matches)
+
+        for match in matches:
+            print('match',match)
+            if match[0] and match[2]:
+                lift, metric = match[2], match[1] 
+            metric = metric.strip().lower()
+            print('metric',metric)
+            best_match = match_with_goals(metric, goals)
+            results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
+
+    for pattern in boosted_positive_pattern_alt:
         
         matches = re.finditer(pattern, text, re.IGNORECASE)
         matches_list = list(matches)
@@ -275,7 +295,7 @@ def extract_lift_and_metric(text, goals):
                 metric = metric.strip().lower()
                 best_match = match_with_goals(metric, goals)
 
-                results.append({"lift": f"-{lift}%", "metric": best_match})
+                results.append({"lift": f"{lift}%", "metric": best_match})
 
 
     print("Final results:", results)
