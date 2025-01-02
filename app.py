@@ -98,24 +98,19 @@ def extract_lift_and_metric(text, goals):
         r"improvement\s*of\s*(\d+\.\d+|\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b",
         r"increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+\.\d+|\d+)%\b",
         r"(\d+\.\d+|\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b",
-        
     ]
 
     positive_patterns2 = [
         r"increase\s+in\s+(.*?)\s+of\s+(\d+(\.\d+)?)%",
         r"(\w+)\s+was\s+(\d+(\.\d+)?)%\s+(?:higher|more)",
-
     ]
 
-    
-    # Negative patterns for lift and metric extraction
     negative_patterns = [
         r"(\d+\.\d+|\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b",
     ]
 
-    negative_patterns2=[
-        # r"(\w+)\s+was\s+(boosted|improved|increased)\s+by\s+(\d+(\.\d+)?)%",
-        # r"(\w+(\s+\w+){0,1})\s+increased\s+by\s+(\d+(\.\d+)?)%",
+    negative_patterns_alt=[
+       r"(reduced|decreased|declined|reduces|decreases|declines)\s+(.*?)\s+by\s+(\d+(\.\d+)?)%"
     ]
 
     positive_patterns3=[
@@ -140,40 +135,6 @@ def extract_lift_and_metric(text, goals):
     results = []
     normalized_goals = [goal.lower() for goal in goals]
 
-    # def match_with_goals(metric, goals):
-    #     metric_words = metric.split()  # Limit to max 3 words
-    #     for goal in goals:
-    #         for word in metric_words:
-    #             if word.lower() in goal.lower():
-    #                 return metric  # Return the original metric if it aligns with any goal
-    #     return ""
-
-    # def match_with_goals(metric, goals):
-    #     """
-    #     Match metric with goals, considering partial matches based on a minimum of 4 consecutive characters.
-    #     Exclude unnecessary words like 'the', 'is', 'am', 'are' from the metric before returning.
-    #     """
-    #     # Define a set of stop words to exclude
-    #     stop_words = {"the", "is", "am", "are", "a", "an", "of", "to", "in", "on", "at", "for", "by", "with", "and", "or"}
-        
-    #     # Split the metric into individual words and filter out stop words
-    #     metric_words = [word for word in metric.split() if word.lower() not in stop_words]
-    #     print('metric_words',metric_words)
-    #     cleaned_metric = " ".join(metric_words)  # Join the cleaned words back into a string
-    #     print('cleaned_metric',cleaned_metric)
-
-    #     for goal in goals:
-    #         print('goal',goal)
-    #         for word in metric_words:
-    #             print('word',word)
-    #             word = word.lower()
-    #             goal = goal.lower()
-                
-    #             if word.lower() in goal.lower():
-    #                 return cleaned_metric  # Return the cleaned metric if it aligns with any goal
-
-    #     return ""
-
     def match_with_goals(metric, goals):
         """
         Match metric with goals, considering partial matches based on stemming.
@@ -197,12 +158,10 @@ def extract_lift_and_metric(text, goals):
             stemmed_goal = stemmer.stem(goal.lower())
             for stemmed_word in stemmed_metric_words:
                 if stemmed_word in stemmed_goal:
-                    return cleaned_metric  # Return the cleaned metric if it aligns with any goal
+                    return cleaned_metric.title()  # Return the cleaned metric if it aligns with any goal
 
         return ""
 
-
-    # Process positive patterns
     for pattern in positive_patterns:
         matches = re.findall(pattern, text)
         print(f"Matches for positive pattern '{pattern}':", matches)
@@ -237,7 +196,6 @@ def extract_lift_and_metric(text, goals):
 
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
     
-    # Process negative patterns
     for pattern in negative_patterns:
         matches = re.findall(pattern, text)
         print(f"Matches for negative pattern '{pattern}':", matches)
@@ -256,21 +214,21 @@ def extract_lift_and_metric(text, goals):
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
         # Process negative patterns
-    for pattern in negative_patterns2:
-        matches = re.findall(pattern, text)
-        print(f"Matches for negative pattern2 '{pattern}':", matches)
+    for pattern in negative_patterns_alt:
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        matches_list = list(matches)
 
-        for match in matches:
-            print('match',match)
-            if match[0] and match[2]:
-                lift, metric = f"-{match[2]}", match[1] 
-            metric = metric.strip().lower()
-            print('metric',metric)
-            best_match = match_with_goals(metric, goals)
-            results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
+        for match in matches_list:
+            print('Match:', match)  
+            
+            if match:
+                lift = f"-{match.group(3)}"
+                metric = match.group(2).strip()
+                metric = metric.strip().lower()
+                best_match = match_with_goals(metric, goals)
 
+                results.append({"lift": f"{lift}%", "metric": best_match})
 
-        # Process negative patterns
     for pattern in positive_patterns3:
         matches = re.findall(pattern, text)
         print(f"Matches for posi pattern3'{pattern}':", matches)
@@ -305,7 +263,7 @@ def extract_lift_and_metric(text, goals):
         
         # Now iterate over matches to process them
         for match in matches_list:
-            print('Match:', match)  # Debug: should print the match object if matches exist
+            print('Match:', match) 
             
             if match:
                 lift = match.group(3) 
@@ -318,8 +276,6 @@ def extract_lift_and_metric(text, goals):
 
     print("Final results:", results)
     return results
-
-
 
 def extract_confidence_level(text):
     """
@@ -334,16 +290,13 @@ def extract_confidence_level(text):
     - x% confidence
     Returns the first match or the maximum value if multiple matches exist.
     """
-    # Updated regex to include "confidence"
     pattern = r"(\d+)%\s*(?:stat(?:istical)?(?:\s+sig(?:nificance)?)?|confidence)"
-    matches = re.findall(pattern, text.lower())  # Case-insensitive search
+    matches = re.findall(pattern, text.lower()) 
     
     if matches:
-        # Convert the matches to integers
         confidence_levels = [int(match) for match in matches]
-        # Return the first match or max(confidence_levels) if you want the maximum
-        return confidence_levels[0]  # Use max(confidence_levels) if required
-    return None  # Return None if no match is found
+        return confidence_levels[0] 
+    return None  
 
 
 @app.route('/process_insight', methods=['POST'])
