@@ -48,10 +48,14 @@ def check_keywords(text, keyword_list, synonyms=None):
     excluded_stems = {stemmer.stem(word) for word in {"research", "researching", "researched", "searched","engaged"}}  # Stem excluded words
     # excluded_words = {"research", "researching", "researched", "searched"}  # Add any other unwanted words here
     
+    
     for keyword in keyword_list:
         keyword_clean = clean_text(keyword.lower())  # Clean and lowercase the keyword
         keyword_words = [word for word in keyword_clean.split() if word not in stop_words]
         keyword_stems = [stemmer.stem(word) for word in keyword_words]
+
+        print(f"Processing keyword: {keyword}")
+        print(f"Keyword stems: {keyword_stems}, Text words: {text_words}")
 
         if keyword_clean in text_clean:
             selected_keywords.append(keyword)
@@ -65,6 +69,12 @@ def check_keywords(text, keyword_list, synonyms=None):
             # Loop through each synonym
             for synonym in synonym_list:
                 synonym_clean = clean_text(synonym.lower())
+                # print('synonym_clean',synonym_clean)
+
+                # Check for dynamic patterns like "X%"
+                if "x" in synonym_clean and re.search(r'\b\d+(\.\d+)?%\b', text_clean):  
+                    selected_keywords.append(keyword)
+                    break
                 
                 # Check if synonym exists as a whole phrase
                 if synonym_clean in text_clean:
@@ -74,6 +84,7 @@ def check_keywords(text, keyword_list, synonyms=None):
                 # Stem the synonym for partial matching
                 synonym_words = [stemmer.stem(word) for word in synonym_clean.split() if word not in stop_words]
                 if all(stem in text_words for stem in synonym_words) and not any(word in excluded_stems for word in synonym_words):
+                # if all(stem in text_words for stem in keyword_stems) and not any(word in excluded_stems for word in keyword_stems):
                     selected_keywords.append(keyword)
                     break
     
@@ -92,12 +103,12 @@ def extract_lift_and_metric(text, goals):
     Returns:
         list: A list of dictionaries with "lift" and "metric" that match the goals.
     """
-    # Positive patterns for lift and metric extraction
+
     positive_patterns = [
         r"(\d+\.\d+|\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*(\w[\w\s]*?)\b",
         r"improvement\s*of\s*(\d+\.\d+|\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b",
         r"increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+\.\d+|\d+)%\b",
-        r"(\d+\.\d+|\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b",
+        # r"(\d+\.\d+|\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b",
     ]
 
     positive_patterns2 = [
@@ -114,24 +125,20 @@ def extract_lift_and_metric(text, goals):
     ]
 
     positive_patterns3=[
-        # r"(\w+)\s+was\s+(boosted|improved|increased)\s+by\s+(\d+(\.\d+)?)%",
         r"(\w+(\s+\w+){0,1})\s+increased\s+by\s+(\d+(\.\d+)?)%",
     ]
 
     positive_patterns4=[
         r"(\w+)\s+was\s+(boosted|improved|increased)\s+by\s+(\d+(\.\d+)?)%",
-        # r"(\w+(\s+\w+){0,1})\s+increased\s+by\s+(\d+(\.\d+)?)%",
     ]
 
     boosted_positive_pattern_alt = [
         r"(boosted|improved|increased|boosts|increases|improves)\s+(.*?)\s+by\s+(\d+(\.\d+)?)%",
     ]
-  
-    
+
     text = text.lower()
     print("Text being analyzed:", text)
-    
-    # Extract matches from positive patterns
+
     results = []
     normalized_goals = [goal.lower() for goal in goals]
 
@@ -140,25 +147,24 @@ def extract_lift_and_metric(text, goals):
         Match metric with goals, considering partial matches based on stemming.
         Exclude unnecessary words like 'the', 'is', 'am', 'are' from the metric before returning.
         """
-        # Initialize stemmer
         stemmer = PorterStemmer()
 
-        # Define a set of stop words to exclude
         stop_words = {"the", "is", "am", "are", "a", "an", "of", "to", "in", "on", "at", "for", "by", "with", "and", "or"}
         
-        # Split the metric into individual words and filter out stop words
         metric_words = [word for word in metric.split() if word.lower() not in stop_words]
-        cleaned_metric = " ".join(metric_words)  # Join the cleaned words back into a string
+        print('metric_words',metric_words)
+        cleaned_metric = " ".join(metric_words)
+        print('cleaned_metric',cleaned_metric)
 
-        # Stem the metric words
         stemmed_metric_words = [stemmer.stem(word.lower()) for word in metric_words]
 
-        # Iterate through the goals to find matches
         for goal in goals:
             stemmed_goal = stemmer.stem(goal.lower())
             for stemmed_word in stemmed_metric_words:
                 if stemmed_word in stemmed_goal:
-                    return cleaned_metric.title()  # Return the cleaned metric if it aligns with any goal
+                    print('stemmed_goal',stemmed_goal)
+                    print('stemmed_word',stemmed_goal)
+                    return cleaned_metric.title()
 
         return ""
 
@@ -182,7 +188,7 @@ def extract_lift_and_metric(text, goals):
 
     for pattern in positive_patterns2:
         matches = re.findall(pattern, text)
-        print(f"Matches for positive pattern '{pattern}':", matches)
+        print(f"Matches for positive pattern2 '{pattern}':", matches)
 
         for match in matches:
             if match[0] and match[1]:
@@ -213,7 +219,6 @@ def extract_lift_and_metric(text, goals):
             best_match = match_with_goals(metric, goals)
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
-        # Process negative patterns
     for pattern in negative_patterns_alt:
         matches = re.finditer(pattern, text, re.IGNORECASE)
         matches_list = list(matches)
@@ -261,7 +266,6 @@ def extract_lift_and_metric(text, goals):
         matches_list = list(matches)
         print(f"Matches for pattern '{pattern}':", matches_list)
         
-        # Now iterate over matches to process them
         for match in matches_list:
             print('Match:', match) 
             
@@ -270,9 +274,7 @@ def extract_lift_and_metric(text, goals):
                 metric = match.group(2).strip()
                 metric = metric.strip().lower()
                 best_match = match_with_goals(metric, goals)
-
                 results.append({"lift": f"{lift}%", "metric": best_match})
-
 
     print("Final results:", results)
     return results
@@ -320,22 +322,24 @@ def process_insight():
         selected_goals = check_keywords(summary, goals, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_research_types = check_keywords(summary, research_types, synonyms=RESEARCH_TYPE_SYNONYMS)
         selected_industries = check_keywords(summary, industries)
-        lift_metric_pairs = extract_lift_and_metric(summary, goals)
+        # Attempt to extract lift and metric
+        try:
+            lift_metric_pairs = extract_lift_and_metric(summary, goals)
+            lift_values = [item['lift'] for item in lift_metric_pairs]
+            metric_values = [item['metric'] for item in lift_metric_pairs]
+        except Exception as e:
+            lift_metric_pairs = []
+            lift_values = []
+            metric_values = []
+            print(f"Error extracting lift and metric: {e}")
 
-        # Separate lifts and metrics
-        lift_values = [item['lift'] for item in lift_metric_pairs]
-        print("lift_values",lift_values)
-        metric_values = [item['metric'] for item in lift_metric_pairs]
-        print("metric_values",metric_values)
-        # Extract confidence levels
         selected_confidence_levels = extract_confidence_level(summary)
 
-        # Priority logic for A/B (Split Test)
-        if lift_metric_pairs:  # If lift values are detected
+        if lift_metric_pairs: 
             ab_split_test_synonyms = RESEARCH_TYPE_SYNONYMS.get("A/B (Split Test)", [])
             if any(keyword in summary.lower() for keyword in ab_split_test_synonyms):
                 if "A/B (Split Test)" not in selected_research_types:
-                    selected_research_types.insert(0, "A/B (Split Test)")  # Ensure priority
+                    selected_research_types.insert(0, "A/B (Split Test)") 
 
         return jsonify({
             "selected_categories": selected_categories,
