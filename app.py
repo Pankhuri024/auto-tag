@@ -33,15 +33,18 @@ except Exception as e:
 
 # Function to normalize text
 def clean_text(text):
-    """Normalize text by removing special characters and extra spaces."""
-    text = re.sub(r'[^\w\s]', ' ', text)  # Replace special characters with a space
-    text = re.sub(r'\s+', ' ', text)  # Remove multiple spaces
+    """Normalize text by removing special characters and extra spaces, but keep '%' as is."""
+    text = re.sub(r'[^\w\s%]', '', text)  # Remove special characters except % and spaces
+    text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with a single space
     return text.strip()
+
 
 # Function to find keywords in the summary text
 def check_keywords(text, keyword_list, synonyms=None):
     selected_keywords = []
+    # print('text',text)
     text_clean = clean_text(text.lower())  # Clean and lowercase the text
+    # print('text_clean',text_clean)
     
     # Stem the cleaned text into a list of stemmed words
     text_words = [stemmer.stem(word) for word in text_clean.split()]
@@ -54,8 +57,8 @@ def check_keywords(text, keyword_list, synonyms=None):
         keyword_words = [word for word in keyword_clean.split() if word not in stop_words]
         keyword_stems = [stemmer.stem(word) for word in keyword_words]
 
-        print(f"Processing keyword: {keyword}")
-        print(f"Keyword stems: {keyword_stems}, Text words: {text_words}")
+        # print(f"Processing keyword: {keyword}")
+        # print(f"Keyword stems: {keyword_stems}, Text words: {text_words}")
 
         if keyword_clean in text_clean:
             selected_keywords.append(keyword)
@@ -72,9 +75,9 @@ def check_keywords(text, keyword_list, synonyms=None):
                 # print('synonym_clean',synonym_clean)
 
                 # Check for dynamic patterns like "X%"
-                if "x" in synonym_clean and re.search(r'\b\d+(\.\d+)?%\b', text_clean):  
-                    selected_keywords.append(keyword)
-                    break
+                # if "x%" in synonym_clean and re.search(r'\b\d+(\.\d+)?%\b', text_clean):  
+                #     selected_keywords.append(keyword)
+                #     break
                 
                 # Check if synonym exists as a whole phrase
                 if synonym_clean in text_clean:
@@ -105,7 +108,8 @@ def extract_lift_and_metric(text, goals):
     """
 
     positive_patterns = [
-        r"(\d+\.\d+|\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*(\w[\w\s]*?)\b",
+        # r"(\d+\.\d+|\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*(\w[\w\s]*?)\b",
+        r"(\d+\.\d+|\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*((?:\w+\s*){1,3})\b",
         r"improvement\s*of\s*(\d+\.\d+|\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b",
         r"increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+\.\d+|\d+)%\b",
         # r"(\d+\.\d+|\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b",
@@ -117,7 +121,8 @@ def extract_lift_and_metric(text, goals):
     ]
 
     negative_patterns = [
-        r"(\d+\.\d+|\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b",
+        # r"(\d+\.\d+|\d+)%\s*(?:less|fewer|lower)\s*(\w[\w\s]*?)\b",
+        r"(\d+\.\d+|\d+)%\s*(?:less|fewer|lower)\s*((?:\b\w+\b\s*){1,3})",
     ]
 
     negative_patterns_alt=[
@@ -132,6 +137,13 @@ def extract_lift_and_metric(text, goals):
         r"(\w+)\s+was\s+(boosted|improved|increased)\s+by\s+(\d+(\.\d+)?)%",
     ]
 
+    positive_patterns5=[
+        # r"uptick\s+of\s+(\d+(\.\d+)?)%\s+in\s+([\w\s]+)",
+        # r"uptick\s+of\s+(\d+(\.\d+)?)%\s+in\s+((?:[a-zA-Z]+\s*){1,3})"
+        r"(?:uptick|lift|uplift)\s+of\s+(\d+(\.\d+)?)%\s+in\s+((?:[a-zA-Z]+\s*){1,3})"
+
+    ]
+
     boosted_positive_pattern_alt = [
         r"(boosted|improved|increased|boosts|increases|improves)\s+(.*?)\s+by\s+(\d+(\.\d+)?)%",
     ]
@@ -142,29 +154,66 @@ def extract_lift_and_metric(text, goals):
     results = []
     normalized_goals = [goal.lower() for goal in goals]
 
+    # def match_with_goals(metric, goals):
+    #     """
+    #     Match metric with goals, considering partial matches based on stemming.
+    #     Exclude unnecessary words like 'the', 'is', 'am', 'are' from the metric before returning.
+    #     """
+    #     stemmer = PorterStemmer()
+
+    #     stop_words = {"the", "is", "am", "are", "a", "an", "of", "to", "in", "on", "at", "for", "by", "with", "and", "or"}
+        
+    #     metric_words = [word for word in metric.split() if word.lower() not in stop_words]
+    #     print('metric_words',metric_words)
+    #     cleaned_metric = " ".join(metric_words)
+    #     print('cleaned_metric',cleaned_metric)
+
+    #     stemmed_metric_words = [stemmer.stem(word.lower()) for word in metric_words]
+
+    #     for goal in goals:
+    #         stemmed_goal = stemmer.stem(goal.lower())
+    #         for stemmed_word in stemmed_metric_words:
+    #             if stemmed_word in stemmed_goal:
+    #                 print('stemmed_goal',stemmed_goal)
+    #                 print('stemmed_word',stemmed_goal)
+    #                 return cleaned_metric.title()
+
+    #     return ""
+
+
     def match_with_goals(metric, goals):
         """
         Match metric with goals, considering partial matches based on stemming.
-        Exclude unnecessary words like 'the', 'is', 'am', 'are' from the metric before returning.
+        Exclude unnecessary words like 'the', 'is', 'am', 'are' from the metric,
+        and return only the matching part of the metric.
         """
-        stemmer = PorterStemmer()
+        from nltk.stem import PorterStemmer
 
+        stemmer = PorterStemmer()
         stop_words = {"the", "is", "am", "are", "a", "an", "of", "to", "in", "on", "at", "for", "by", "with", "and", "or"}
         
+        # Remove stop words from the metric
         metric_words = [word for word in metric.split() if word.lower() not in stop_words]
-        print('metric_words',metric_words)
-        cleaned_metric = " ".join(metric_words)
-        print('cleaned_metric',cleaned_metric)
+        print('metric_words:', metric_words)
 
+        # Stem the metric words
         stemmed_metric_words = [stemmer.stem(word.lower()) for word in metric_words]
 
         for goal in goals:
-            stemmed_goal = stemmer.stem(goal.lower())
-            for stemmed_word in stemmed_metric_words:
-                if stemmed_word in stemmed_goal:
-                    print('stemmed_goal',stemmed_goal)
-                    print('stemmed_word',stemmed_goal)
-                    return cleaned_metric.title()
+            stemmed_goal_words = [stemmer.stem(word.lower()) for word in goal.split()]
+            
+            # Find matching stemmed words
+            matching_words = [
+                metric_words[i]
+                for i, stem_word in enumerate(stemmed_metric_words)
+                if stem_word in stemmed_goal_words
+            ]
+            
+            if matching_words:
+                # Join and return only the matching segment of the metric
+                matching_segment = " ".join(matching_words)
+                print('matching_segment:', matching_segment)
+                return matching_segment.title()
 
         return ""
 
@@ -255,6 +304,20 @@ def extract_lift_and_metric(text, goals):
             print('match',match)
             if match[0] and match[2]:
                 lift, metric = match[2], match[0] 
+            metric = metric.strip().lower()
+            print('metric',metric)
+            best_match = match_with_goals(metric, goals)
+            results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
+
+
+    for pattern in positive_patterns5:
+        matches = re.findall(pattern, text)
+        print(f"Matches for posi pattern5'{pattern}':", matches)
+
+        for match in matches:
+            print('match',match)
+            if match[0] and match[2]:
+                lift, metric = match[0], match[2] 
             metric = metric.strip().lower()
             print('metric',metric)
             best_match = match_with_goals(metric, goals)
