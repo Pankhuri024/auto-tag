@@ -130,11 +130,12 @@ def extract_lift_and_metric(text, goals):
     ]
 
     positive_patterns3=[
-        r"(\w+(\s+\w+){0,1})\s+increased\s+by\s+(\d+(\.\d+)?)%",
+        r"(\w+(\s+\w+){0,3})\s+increased\s+by\s+(\d+(\.\d+)?)%",
     ]
 
     positive_patterns4=[
-        r"(\w+)\s+was\s+(boosted|improved|increased)\s+by\s+(\d+(\.\d+)?)%",
+        # r"(\w+)\s+was\s+(boosted|improved|increased)\s+by\s+(\d+(\.\d+)?)%",
+        r"(\w+(\s+\w+){0,3})\s+was\s+(boosted|improved|increased)\s+by\s+(\d+(\.\d+)?)%",
     ]
 
     positive_patterns5=[
@@ -154,38 +155,10 @@ def extract_lift_and_metric(text, goals):
     results = []
     normalized_goals = [goal.lower() for goal in goals]
 
-    # def match_with_goals(metric, goals):
-    #     """
-    #     Match metric with goals, considering partial matches based on stemming.
-    #     Exclude unnecessary words like 'the', 'is', 'am', 'are' from the metric before returning.
-    #     """
-    #     stemmer = PorterStemmer()
-
-    #     stop_words = {"the", "is", "am", "are", "a", "an", "of", "to", "in", "on", "at", "for", "by", "with", "and", "or"}
-        
-    #     metric_words = [word for word in metric.split() if word.lower() not in stop_words]
-    #     print('metric_words',metric_words)
-    #     cleaned_metric = " ".join(metric_words)
-    #     print('cleaned_metric',cleaned_metric)
-
-    #     stemmed_metric_words = [stemmer.stem(word.lower()) for word in metric_words]
-
-    #     for goal in goals:
-    #         stemmed_goal = stemmer.stem(goal.lower())
-    #         for stemmed_word in stemmed_metric_words:
-    #             if stemmed_word in stemmed_goal:
-    #                 print('stemmed_goal',stemmed_goal)
-    #                 print('stemmed_word',stemmed_goal)
-    #                 return cleaned_metric.title()
-
-    #     return ""
-
-
     def match_with_goals(metric, goals):
         """
         Match metric with goals, considering partial matches based on stemming.
-        Exclude unnecessary words like 'the', 'is', 'am', 'are' from the metric,
-        and return only the matching part of the metric.
+        Select three consecutive words if the first and last words match any goal.
         """
         from nltk.stem import PorterStemmer
 
@@ -200,9 +173,22 @@ def extract_lift_and_metric(text, goals):
         stemmed_metric_words = [stemmer.stem(word.lower()) for word in metric_words]
 
         for goal in goals:
+            # Stem the goal words
             stemmed_goal_words = [stemmer.stem(word.lower()) for word in goal.split()]
-            
-            # Find matching stemmed words
+
+            for i in range(len(metric_words) - 2):
+                # Check for three consecutive words
+                segment = metric_words[i:i+3]
+                segment_stemmed = stemmed_metric_words[i:i+3]
+                
+                # Match the first and last word with the goal
+                if (segment_stemmed[0] in stemmed_goal_words and 
+                    segment_stemmed[-1] in stemmed_goal_words):
+                    matching_segment = " ".join(segment)
+                    print('matching_segment:', matching_segment)
+                    return matching_segment.title()
+
+            # General match without the three-word rule
             matching_words = [
                 metric_words[i]
                 for i, stem_word in enumerate(stemmed_metric_words)
@@ -210,10 +196,36 @@ def extract_lift_and_metric(text, goals):
             ]
             
             if matching_words:
-                # Join and return only the matching segment of the metric
                 matching_segment = " ".join(matching_words)
                 print('matching_segment:', matching_segment)
                 return matching_segment.title()
+
+        return ""
+
+
+    def match_with_goals_2(metric, goals):
+        """
+        Match metric with goals, considering partial matches based on stemming.
+        Exclude unnecessary words like 'the', 'is', 'am', 'are' from the metric before returning.
+        """
+        stemmer = PorterStemmer()
+
+        stop_words = {"the", "is", "am", "are", "a", "an", "of", "to", "in", "on", "at", "for", "by", "with", "and", "or"}
+        
+        metric_words = [word for word in metric.split() if word.lower() not in stop_words]
+        print('metric_words',metric_words)
+        cleaned_metric = " ".join(metric_words)
+        print('cleaned_metric',cleaned_metric)
+
+        stemmed_metric_words = [stemmer.stem(word.lower()) for word in metric_words]
+
+        for goal in goals:
+            stemmed_goal = stemmer.stem(goal.lower())
+            for stemmed_word in stemmed_metric_words:
+                if stemmed_word in stemmed_goal:
+                    print('stemmed_goal',stemmed_goal)
+                    print('stemmed_word',stemmed_goal)
+                    return cleaned_metric.title()
 
         return ""
 
@@ -290,7 +302,7 @@ def extract_lift_and_metric(text, goals):
         for match in matches:
             print('match',match)
             if match[0] and match[2]:
-                lift, metric = match[2], match[1] 
+                lift, metric = match[2], match[0] 
             metric = metric.strip().lower()
             print('metric',metric)
             best_match = match_with_goals(metric, goals)
@@ -303,7 +315,7 @@ def extract_lift_and_metric(text, goals):
         for match in matches:
             print('match',match)
             if match[0] and match[2]:
-                lift, metric = match[2], match[0] 
+                lift, metric = match[3], match[0] 
             metric = metric.strip().lower()
             print('metric',metric)
             best_match = match_with_goals(metric, goals)
@@ -336,7 +348,7 @@ def extract_lift_and_metric(text, goals):
                 lift = match.group(3) 
                 metric = match.group(2).strip()
                 metric = metric.strip().lower()
-                best_match = match_with_goals(metric, goals)
+                best_match = match_with_goals_2(metric, goals)
                 results.append({"lift": f"{lift}%", "metric": best_match})
 
     print("Final results:", results)
