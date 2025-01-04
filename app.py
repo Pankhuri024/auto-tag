@@ -48,7 +48,7 @@ def check_keywords(text, keyword_list, synonyms=None):
     
     # Stem the cleaned text into a list of stemmed words
     text_words = [stemmer.stem(word) for word in text_clean.split()]
-    excluded_stems = {stemmer.stem(word) for word in {"research", "researching", "researched", "searched","engaged"}}  # Stem excluded words
+    excluded_stems = {stemmer.stem(word) for word in {"research", "researching", "researched", "searched","search","engaged"}}  # Stem excluded words
     # excluded_words = {"research", "researching", "researched", "searched"}  # Add any other unwanted words here
     
     
@@ -57,8 +57,8 @@ def check_keywords(text, keyword_list, synonyms=None):
         keyword_words = [word for word in keyword_clean.split() if word not in stop_words]
         keyword_stems = [stemmer.stem(word) for word in keyword_words]
 
-        # print(f"Processing keyword: {keyword}")
-        # print(f"Keyword stems: {keyword_stems}, Text words: {text_words}")
+        print(f"Processing keyword: {keyword}")
+        print(f"Keyword stems: {keyword_stems}, Text words: {text_words}")
 
         if keyword_clean in text_clean:
             selected_keywords.append(keyword)
@@ -72,7 +72,7 @@ def check_keywords(text, keyword_list, synonyms=None):
             # Loop through each synonym
             for synonym in synonym_list:
                 synonym_clean = clean_text(synonym.lower())
-                # print('synonym_clean',synonym_clean)
+                print('synonym_clean',synonym_clean)
 
                 # Check for dynamic patterns like "X%"
                 # if "x%" in synonym_clean and re.search(r'\b\d+(\.\d+)?%\b', text_clean):  
