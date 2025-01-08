@@ -83,7 +83,7 @@ def check_keywords(text, keyword_list, synonyms=None):
         
                 # Special condition for "Amplify.com"
                 if keyword == "Amplify.com":
-                    if "landing" in text_clean:
+                    if "landing page" in text_clean:
                         # Skip this keyword if "landing" is in the text
                         continue
                     if synonym_clean in text_clean:
@@ -423,7 +423,7 @@ def load_org_synonyms(org_name):
     if org_name == "amplify":
         org_synonyms = {
             "Hubspot Landing Pages": ["landing page", "landing pages"],
-            "Amplify.com": ["webpage", "web page", "page"]
+            "Amplify.com": ["homepage", "home page","webpage", "web page", "page"]
         }
     # You can also combine these with your global synonyms if needed
     return org_synonyms
@@ -482,7 +482,7 @@ def process_insight():
         
         # Add the new condition
         if "Amplify.com" in selected_categories and "A/B (Split Test)" in selected_research_types:
-            if "convert" not in selected_tools:
+            if "Convert" not in selected_tools:
                 selected_tools.append("convert")
 
         return jsonify({
