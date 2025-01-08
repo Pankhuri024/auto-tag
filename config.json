@@ -15,6 +15,8 @@
       "uplift",
       "uptick",
       "lift",
+      "boost",
+      "boosted",
       "percentage",
       "confidence",
       "confidence level",
@@ -52,13 +54,15 @@
       "purchase trend",
       "purchasing trend"
     ],
-    "Average Order Value": ["average order value", "AOV", "aov"],
+    "Average order value": ["average order value", "AOV", "aov"],
     "AOV": ["average order value", "AOV", "aov", "Average order value"],
     "Email - Mailchimp": ["MC emails", "Mailchimp", "MC email", "MC", "in MC"],
     "Mailchimp": ["Mailchimp", "in MC"],
     "Email - Hubspot": ["HS email", "HS emails", "in HS"],
     "HubSpot": ["HubSpot", "in HS"],
     "Email CTR": ["CTR", "CTOR"],
-    "Layout": ["horizontal swap"]
+    "Layout": ["horizontal swap"],
+    "HubSpot Landing Pages": ["land page", "land pages"],
+    "Amplify.com": ["webpage", "web page", "page"]
   }
 }
