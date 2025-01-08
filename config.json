@@ -17,6 +17,9 @@
       "lift",
       "boost",
       "boosted",
+      "improves",
+      "improved",
+      "improve",
       "percentage",
       "confidence",
       "confidence level",
@@ -61,8 +64,6 @@
     "Email - Hubspot": ["HS email", "HS emails", "in HS"],
     "HubSpot": ["HubSpot", "in HS"],
     "Email CTR": ["CTR", "CTOR"],
-    "Layout": ["horizontal swap"],
-    "HubSpot Landing Pages": ["land page", "land pages"],
-    "Amplify.com": ["webpage", "web page", "page"]
+    "Layout": ["horizontal swap"]
   }
 }
