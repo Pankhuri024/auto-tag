@@ -130,7 +130,7 @@ def extract_lift_and_metric(text, goals):
 
     positive_patterns = [
         # r"(\d+\.\d+|\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*(\w[\w\s]*?)\b",
-        r"(\d+\.\d+|\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more)\s*(?:in|of)?\s*((?:\w+\s*){1,3})\b",
+        r"(\d+\.\d+|\d+)%\s*(?:lift|uplift|increase|improvement|higher|uptick|more|boosts|boost|improve)\s*(?:in|of)?\s*((?:\w+\s*){1,3})\b",
         r"improvement\s*of\s*(\d+\.\d+|\d+)%\s*(?:in|of)\s*(\w[\w\s]*?)\b",
         r"increase\s*in\s*(\w[\w\s]*?)\s*of\s*(\d+\.\d+|\d+)%\b",
         # r"(\d+\.\d+|\d+)%\s*(?:lift)\s*(?:\s*\(or\s*of\s*\))?\s*(in|of)?\s*(\w[\w\s]*?)\b",
