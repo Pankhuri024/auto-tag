@@ -28,7 +28,7 @@ try:
         # print("Loaded config.json content:", json.dumps(RESEARCH_TYPE_SYNONYMS, indent=4))
 except Exception as e:
     RESEARCH_TYPE_SYNONYMS = {}
-    print(f"Error loading config.json: {e}")
+    # print(f"Error loading config.json: {e}")
 
 
 # Function to normalize text
@@ -149,8 +149,12 @@ def extract_lift_and_metric(text, goals):
         r"(boosted|improved|increased|boosts|increases|improves)\s+(.*?)\s+by\s+(\d+(\.\d+)?)%",
     ]
 
+    boosted_positive2 = [
+        r"boost\s+of\s+(\d+)%\s+(in|on|for)?\s*((?:[a-zA-Z]+\s*){1,3})",
+    ]
+
     text = text.lower()
-    print("Text being analyzed:", text)
+    # print("Text being analyzed:", text)
 
     results = []
     normalized_goals = [goal.lower() for goal in goals]
@@ -167,7 +171,7 @@ def extract_lift_and_metric(text, goals):
         
         # Remove stop words from the metric
         metric_words = [word for word in metric.split() if word.lower() not in stop_words]
-        print('metric_words:', metric_words)
+        # print('metric_words:', metric_words)
 
         # Stem the metric words
         stemmed_metric_words = [stemmer.stem(word.lower()) for word in metric_words]
@@ -185,7 +189,7 @@ def extract_lift_and_metric(text, goals):
                 if (segment_stemmed[0] in stemmed_goal_words and 
                     segment_stemmed[-1] in stemmed_goal_words):
                     matching_segment = " ".join(segment)
-                    print('matching_segment:', matching_segment)
+                    # print('matching_segment:', matching_segment)
                     return matching_segment.title()
 
             # General match without the three-word rule
@@ -197,7 +201,7 @@ def extract_lift_and_metric(text, goals):
             
             if matching_words:
                 matching_segment = " ".join(matching_words)
-                print('matching_segment:', matching_segment)
+                # print('matching_segment:', matching_segment)
                 return matching_segment.title()
 
         return ""
@@ -213,9 +217,9 @@ def extract_lift_and_metric(text, goals):
         stop_words = {"the", "is", "am", "are", "a", "an", "of", "to", "in", "on", "at", "for", "by", "with", "and", "or"}
         
         metric_words = [word for word in metric.split() if word.lower() not in stop_words]
-        print('metric_words',metric_words)
+        # print('metric_words',metric_words)
         cleaned_metric = " ".join(metric_words)
-        print('cleaned_metric',cleaned_metric)
+        # print('cleaned_metric',cleaned_metric)
 
         stemmed_metric_words = [stemmer.stem(word.lower()) for word in metric_words]
 
@@ -223,15 +227,14 @@ def extract_lift_and_metric(text, goals):
             stemmed_goal = stemmer.stem(goal.lower())
             for stemmed_word in stemmed_metric_words:
                 if stemmed_word in stemmed_goal:
-                    print('stemmed_goal',stemmed_goal)
-                    print('stemmed_word',stemmed_goal)
+                    # print('stemmed_goal',stemmed_goal)
                     return cleaned_metric.title()
 
         return ""
 
     for pattern in positive_patterns:
         matches = re.findall(pattern, text)
-        print(f"Matches for positive pattern '{pattern}':", matches)
+        # print(f"Matches for positive pattern '{pattern}':", matches)
 
         for match in matches:
             if match[0] and match[1]:
@@ -243,13 +246,13 @@ def extract_lift_and_metric(text, goals):
             
             metric = metric.strip().lower()
             best_match = match_with_goals(metric, goals)
-            print(f"Best match for metric '{metric}': '{best_match}'")
+            # print(f"Best match for metric '{metric}': '{best_match}'")
 
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
     for pattern in positive_patterns2:
         matches = re.findall(pattern, text)
-        print(f"Matches for positive pattern2 '{pattern}':", matches)
+        # print(f"Matches for positive pattern2 '{pattern}':", matches)
 
         for match in matches:
             if match[0] and match[1]:
@@ -259,16 +262,16 @@ def extract_lift_and_metric(text, goals):
             
             metric = metric.strip().lower()
             best_match = match_with_goals(metric, goals)
-            print(f"Best match for metric '{metric}': '{best_match}'")
+            # print(f"Best match for metric '{metric}': '{best_match}'")
 
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
     
     for pattern in negative_patterns:
         matches = re.findall(pattern, text)
-        print(f"Matches for negative pattern '{pattern}':", matches)
+        # print(f"Matches for negative pattern '{pattern}':", matches)
 
         for match in matches:
-            print('match',match)
+            # print('match',match)
             if match[0] and match[1]:
                 lift, metric = f"-{match[0]}", match[1]
             elif match[2] and match[3]:
@@ -285,7 +288,7 @@ def extract_lift_and_metric(text, goals):
         matches_list = list(matches)
 
         for match in matches_list:
-            print('Match:', match)  
+            # print('Match:', match)  
             
             if match:
                 lift = f"-{match.group(3)}"
@@ -297,41 +300,41 @@ def extract_lift_and_metric(text, goals):
 
     for pattern in positive_patterns3:
         matches = re.findall(pattern, text)
-        print(f"Matches for posi pattern3'{pattern}':", matches)
+        # print(f"Matches for posi pattern3'{pattern}':", matches)
 
         for match in matches:
-            print('match',match)
+            # print('match',match)
             if match[0] and match[2]:
                 lift, metric = match[2], match[0] 
             metric = metric.strip().lower()
-            print('metric',metric)
+            # print('metric',metric)
             best_match = match_with_goals(metric, goals)
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
     for pattern in positive_patterns4:
         matches = re.findall(pattern, text)
-        print(f"Matches for posi pattern4'{pattern}':", matches)
+        # print(f"Matches for posi pattern4'{pattern}':", matches)
 
         for match in matches:
-            print('match',match)
+            # print('match',match)
             if match[0] and match[2]:
                 lift, metric = match[3], match[0] 
             metric = metric.strip().lower()
-            print('metric',metric)
+            # print('metric',metric)
             best_match = match_with_goals(metric, goals)
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
 
     for pattern in positive_patterns5:
         matches = re.findall(pattern, text)
-        print(f"Matches for posi pattern5'{pattern}':", matches)
+        # print(f"Matches for posi pattern5'{pattern}':", matches)
 
         for match in matches:
-            print('match',match)
+            # print('match',match)
             if match[0] and match[2]:
                 lift, metric = match[0], match[2] 
             metric = metric.strip().lower()
-            print('metric',metric)
+            # print('metric',metric)
             best_match = match_with_goals(metric, goals)
             results.append({"lift": f"{lift}%", "metric": best_match if best_match else ""})
 
@@ -339,16 +342,32 @@ def extract_lift_and_metric(text, goals):
         
         matches = re.finditer(pattern, text, re.IGNORECASE)
         matches_list = list(matches)
-        print(f"Matches for pattern '{pattern}':", matches_list)
+        # print(f"Matches for pattern '{pattern}':", matches_list)
         
         for match in matches_list:
-            print('Match:', match) 
+            # print('Match:', match) 
             
             if match:
                 lift = match.group(3) 
                 metric = match.group(2).strip()
                 metric = metric.strip().lower()
                 best_match = match_with_goals_2(metric, goals)
+                results.append({"lift": f"{lift}%", "metric": best_match})
+
+    for pattern in boosted_positive2:
+        
+        matches = re.finditer(pattern, text, re.IGNORECASE)
+        matches_list = list(matches)
+        # print(f"Matches for boosted_positive2 '{pattern}':", matches_list)
+        
+        for match in matches_list:
+            # print('Match:', match) 
+            
+            if match:
+                lift = match.group(1) 
+                metric = match.group(3).strip()
+                metric = metric.strip().lower()
+                best_match = match_with_goals(metric, goals)
                 results.append({"lift": f"{lift}%", "metric": best_match})
 
     print("Final results:", results)
@@ -406,7 +425,7 @@ def process_insight():
             lift_metric_pairs = []
             lift_values = []
             metric_values = []
-            print(f"Error extracting lift and metric: {e}")
+            # print(f"Error extracting lift and metric: {e}")
 
         selected_confidence_levels = extract_confidence_level(summary)
 
