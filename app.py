@@ -479,7 +479,7 @@ def process_insight():
             if any(keyword in summary.lower() for keyword in ab_split_test_synonyms):
                 if "A/B (Split Test)" not in selected_research_types:
                     selected_research_types.insert(0, "A/B (Split Test)") 
-        
+    
         # Add the new condition
         if "Amplify.com" in selected_categories and "A/B (Split Test)" in selected_research_types:
             if "Convert" not in selected_tools:
