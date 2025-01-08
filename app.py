@@ -25,6 +25,7 @@ try:
     with open("config.json", "r") as file:
         config_data  = json.load(file)
         RESEARCH_TYPE_SYNONYMS = config_data.get("research_type_synonyms", {})
+        
         # print("Loaded config.json content:", json.dumps(RESEARCH_TYPE_SYNONYMS, indent=4))
 except Exception as e:
     RESEARCH_TYPE_SYNONYMS = {}
@@ -59,6 +60,11 @@ def check_keywords(text, keyword_list, synonyms=None):
 
         print(f"Processing keyword: {keyword}")
         print(f"Keyword stems: {keyword_stems}, Text words: {text_words}")
+        print('text_clean',text_clean)
+        # print('keyword_clean',keyword_clean)
+        # print('keyword_words',keyword_words)
+        # print('keyword_stems',keyword_stems)
+        # print('synonyms',synonyms)
 
         if keyword_clean in text_clean:
             selected_keywords.append(keyword)
@@ -68,11 +74,26 @@ def check_keywords(text, keyword_list, synonyms=None):
         # Check for synonyms if provided
         if synonyms and keyword in synonyms:
             synonym_list = synonyms[keyword]
+            print('synonym_list',synonym_list)
             
             # Loop through each synonym
             for synonym in synonym_list:
                 synonym_clean = clean_text(synonym.lower())
                 print('synonym_clean',synonym_clean)
+        
+                # Special condition for "Amplify.com"
+                if keyword == "Amplify.com":
+                    if "landing" in text_clean:
+                        # Skip this keyword if "landing" is in the text
+                        continue
+                    if synonym_clean in text_clean:
+                        selected_keywords.append(keyword)
+                        break
+                    synonym_words = [stemmer.stem(word) for word in synonym_clean.split() if word not in stop_words]
+                    if all(stem in text_words for stem in synonym_words) and not any(word in excluded_stems for word in synonym_words):
+                        selected_keywords.append(keyword)
+                        break
+               
 
                 # Check for dynamic patterns like "X%"
                 # if "x%" in synonym_clean and re.search(r'\b\d+(\.\d+)?%\b', text_clean):  
@@ -392,7 +413,20 @@ def extract_confidence_level(text):
     if matches:
         confidence_levels = [int(match) for match in matches]
         return confidence_levels[0] 
-    return None  
+    return None 
+
+
+def load_org_synonyms(org_name):
+    # Placeholder for fetching organization-specific synonyms from the database
+    org_synonyms = {}
+    # Check if org_id matches the specific organization (e.g., 633)
+    if org_name == "amplify":
+        org_synonyms = {
+            "Hubspot Landing Pages": ["landing page", "landing pages"],
+            "Amplify.com": ["webpage", "web page", "page"]
+        }
+    # You can also combine these with your global synonyms if needed
+    return org_synonyms
 
 
 @app.route('/process_insight', methods=['POST'])
@@ -406,15 +440,26 @@ def process_insight():
         elements = data.get('elements', [])
         research_types = data.get('research_types', [])
         industries = data.get('industries', [])
+        org_name = (data.get('org_name', ''))  # Ensure org_id is an integer
+        print('org_name',org_name)
 
         if not summary:
             return jsonify({"error": "Summary text is required"}), 400
 
-        selected_categories = check_keywords(summary, categories, synonyms=RESEARCH_TYPE_SYNONYMS)
-        selected_elements = check_keywords(summary, elements, synonyms=RESEARCH_TYPE_SYNONYMS)
-        selected_tools = check_keywords(summary, tools, synonyms=RESEARCH_TYPE_SYNONYMS)
-        selected_goals = check_keywords(summary, goals, synonyms=RESEARCH_TYPE_SYNONYMS)
-        selected_research_types = check_keywords(summary, research_types, synonyms=RESEARCH_TYPE_SYNONYMS)
+        # Load organization-specific synonyms if org_id is provided
+        org_synonyms = {}
+        if org_name:
+            org_synonyms = load_org_synonyms(org_name)
+
+        # Merge organization-specific synonyms with the global ones
+        combined_synonyms = {**RESEARCH_TYPE_SYNONYMS, **org_synonyms}
+        print('org_synonyms',org_synonyms)
+
+        selected_categories = check_keywords(summary, categories, synonyms=combined_synonyms)
+        selected_elements = check_keywords(summary, elements, synonyms=combined_synonyms)
+        selected_tools = check_keywords(summary, tools, synonyms=combined_synonyms)
+        selected_goals = check_keywords(summary, goals, synonyms=combined_synonyms)
+        selected_research_types = check_keywords(summary, research_types, synonyms=combined_synonyms)
         selected_industries = check_keywords(summary, industries)
         # Attempt to extract lift and metric
         try:
@@ -434,6 +479,11 @@ def process_insight():
             if any(keyword in summary.lower() for keyword in ab_split_test_synonyms):
                 if "A/B (Split Test)" not in selected_research_types:
                     selected_research_types.insert(0, "A/B (Split Test)") 
+        
+        # Add the new condition
+        if "Amplify.com" in selected_categories and "A/B (Split Test)" in selected_research_types:
+            if "convert" not in selected_tools:
+                selected_tools.append("convert")
 
         return jsonify({
             "selected_categories": selected_categories,
