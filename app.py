@@ -483,7 +483,7 @@ def process_insight():
         # Add the new condition
         if "Amplify.com" in selected_categories and "A/B (Split Test)" in selected_research_types:
             if "Convert" not in selected_tools:
-                selected_tools.append("convert")
+                selected_tools.append("Convert")
 
         return jsonify({
             "selected_categories": selected_categories,
