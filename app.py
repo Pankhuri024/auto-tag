@@ -49,7 +49,8 @@ def check_keywords(text, keyword_list, synonyms=None):
     
     # Stem the cleaned text into a list of stemmed words
     text_words = [stemmer.stem(word) for word in text_clean.split()]
-    excluded_stems = {stemmer.stem(word) for word in {"research", "researching", "researched", "searched","search","engaged"}}  # Stem excluded words
+    excluded_stems = {stemmer.stem(word) for word in {"research", "researching", "researched", "searched","search","engaged","generated"}}  # Stem excluded words
+    print('excluded_stems',excluded_stems)
     # excluded_words = {"research", "researching", "researched", "searched"}  # Add any other unwanted words here
     
     
@@ -171,7 +172,7 @@ def extract_lift_and_metric(text, goals):
     ]
 
     boosted_positive2 = [
-        r"boost\s+of\s+(\d+)%\s+(in|on|for)?\s*((?:[a-zA-Z]+\s*){1,3})",
+        r"boosts?\s+of\s+(\d+)%\s+(in|on|for)?\s*((?:[a-zA-Z]+\s*){1,3})"
     ]
 
     text = text.lower()
@@ -423,7 +424,8 @@ def load_org_synonyms(org_name):
     if org_name == "amplify":
         org_synonyms = {
             "Hubspot Landing Pages": ["landing page", "landing pages"],
-            "Amplify.com": ["homepage", "home page","webpage", "web page", "page"]
+            "Amplify.com": ["homepage", "home page","webpage", "web page", "page"],
+            "Landing page submission rate": ["landing page", "landing pages"]
         }
     # You can also combine these with your global synonyms if needed
     return org_synonyms
@@ -440,7 +442,7 @@ def process_insight():
         elements = data.get('elements', [])
         research_types = data.get('research_types', [])
         industries = data.get('industries', [])
-        org_name = (data.get('org_name', ''))  # Ensure org_id is an integer
+        org_name = data.get('org_name', '')  # Ensure org_id is an integer
         print('org_name',org_name)
 
         if not summary:
